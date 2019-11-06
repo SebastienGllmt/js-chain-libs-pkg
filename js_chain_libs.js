@@ -185,7 +185,9 @@ export class Account {
     */
     static from_public_key(key) {
         _assertClass(key, PublicKey);
-        const ret = wasm.account_from_public_key(key.ptr);
+        const ptr0 = key.ptr;
+        key.ptr = 0;
+        const ret = wasm.account_from_public_key(ptr0);
         return Account.__wrap(ret);
     }
     /**
@@ -352,6 +354,25 @@ export class Address {
         this.ptr = 0;
 
         wasm.__wbg_address_free(ptr);
+    }
+    /**
+    * @param {any} bytes
+    * @returns {Address}
+    */
+    static from_bytes(bytes) {
+        const ret = wasm.address_from_bytes(addHeapObject(bytes));
+        return Address.__wrap(ret);
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    as_bytes() {
+        const retptr = 8;
+        const ret = wasm.address_as_bytes(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
     }
     /**
     * Construct Address from its bech32 representation
@@ -872,7 +893,9 @@ export class Certificate {
     */
     static stake_delegation(stake_delegation) {
         _assertClass(stake_delegation, StakeDelegation);
-        const ret = wasm.certificate_stake_delegation(stake_delegation.ptr);
+        const ptr0 = stake_delegation.ptr;
+        stake_delegation.ptr = 0;
+        const ret = wasm.certificate_stake_delegation(ptr0);
         return Certificate.__wrap(ret);
     }
     /**
@@ -882,7 +905,9 @@ export class Certificate {
     */
     static stake_pool_registration(pool_registration) {
         _assertClass(pool_registration, PoolRegistration);
-        const ret = wasm.certificate_stake_pool_registration(pool_registration.ptr);
+        const ptr0 = pool_registration.ptr;
+        pool_registration.ptr = 0;
+        const ret = wasm.certificate_stake_pool_registration(ptr0);
         return Certificate.__wrap(ret);
     }
     /**
@@ -890,7 +915,9 @@ export class Certificate {
     */
     sign(private_key) {
         _assertClass(private_key, PrivateKey);
-        wasm.certificate_sign(this.ptr, private_key.ptr);
+        const ptr0 = private_key.ptr;
+        private_key.ptr = 0;
+        wasm.certificate_sign(this.ptr, ptr0);
     }
 }
 /**
@@ -996,9 +1023,15 @@ export class Fee {
     */
     static linear_fee(constant, coefficient, certificate) {
         _assertClass(constant, Value);
+        const ptr0 = constant.ptr;
+        constant.ptr = 0;
         _assertClass(coefficient, Value);
+        const ptr1 = coefficient.ptr;
+        coefficient.ptr = 0;
         _assertClass(certificate, Value);
-        const ret = wasm.fee_linear_fee(constant.ptr, coefficient.ptr, certificate.ptr);
+        const ptr2 = certificate.ptr;
+        certificate.ptr = 0;
+        const ret = wasm.fee_linear_fee(ptr0, ptr1, ptr2);
         return Fee.__wrap(ret);
     }
     /**
@@ -1008,7 +1041,9 @@ export class Fee {
     */
     calculate(tx) {
         _assertClass(tx, Transaction);
-        const ret = wasm.fee_calculate(this.ptr, tx.ptr);
+        const ptr0 = tx.ptr;
+        tx.ptr = 0;
+        const ret = wasm.fee_calculate(this.ptr, ptr0);
         return ret === 0 ? undefined : Value.__wrap(ret);
     }
 }
@@ -1036,7 +1071,9 @@ export class Fragment {
     */
     static from_authenticated_transaction(tx) {
         _assertClass(tx, AuthenticatedTransaction);
-        const ret = wasm.fragment_from_authenticated_transaction(tx.ptr);
+        const ptr0 = tx.ptr;
+        tx.ptr = 0;
+        const ret = wasm.fragment_from_authenticated_transaction(ptr0);
         return Fragment.__wrap(ret);
     }
     /**
@@ -1046,7 +1083,9 @@ export class Fragment {
     */
     static from_generated_transaction(tx) {
         _assertClass(tx, AuthenticatedTransaction);
-        const ret = wasm.fragment_from_generated_transaction(tx.ptr);
+        const ptr0 = tx.ptr;
+        tx.ptr = 0;
+        const ret = wasm.fragment_from_generated_transaction(ptr0);
         return Fragment.__wrap(ret);
     }
     /**
@@ -1330,7 +1369,9 @@ export class Input {
     static from_account(account, v) {
         _assertClass(account, Account);
         _assertClass(v, Value);
-        const ret = wasm.input_from_account(account.ptr, v.ptr);
+        const ptr0 = v.ptr;
+        v.ptr = 0;
+        const ret = wasm.input_from_account(account.ptr, ptr0);
         return Input.__wrap(ret);
     }
     /**
@@ -1546,7 +1587,9 @@ export class OutputPolicy {
     */
     static one(address) {
         _assertClass(address, Address);
-        const ret = wasm.outputpolicy_one(address.ptr);
+        const ptr0 = address.ptr;
+        address.ptr = 0;
+        const ret = wasm.outputpolicy_one(ptr0);
         return OutputPolicy.__wrap(ret);
     }
 }
@@ -1648,11 +1691,21 @@ export class PoolRegistration {
     */
     constructor(serial, owners, management_threshold, start_validity, kes_public_key, vrf_public_key) {
         _assertClass(serial, U128);
+        const ptr0 = serial.ptr;
+        serial.ptr = 0;
         _assertClass(owners, PublicKeys);
+        const ptr1 = owners.ptr;
+        owners.ptr = 0;
         _assertClass(start_validity, TimeOffsetSeconds);
+        const ptr2 = start_validity.ptr;
+        start_validity.ptr = 0;
         _assertClass(kes_public_key, KesPublicKey);
+        const ptr3 = kes_public_key.ptr;
+        kes_public_key.ptr = 0;
         _assertClass(vrf_public_key, VrfPublicKey);
-        const ret = wasm.poolregistration_new(serial.ptr, owners.ptr, management_threshold, start_validity.ptr, kes_public_key.ptr, vrf_public_key.ptr);
+        const ptr4 = vrf_public_key.ptr;
+        vrf_public_key.ptr = 0;
+        const ret = wasm.poolregistration_new(ptr0, ptr1, management_threshold, ptr2, ptr3, ptr4);
         return PoolRegistration.__wrap(ret);
     }
     /**
@@ -1881,7 +1934,9 @@ export class PublicKeys {
     */
     add(key) {
         _assertClass(key, PublicKey);
-        wasm.publickeys_add(this.ptr, key.ptr);
+        const ptr0 = key.ptr;
+        key.ptr = 0;
+        wasm.publickeys_add(this.ptr, ptr0);
     }
 }
 /**
@@ -1974,8 +2029,12 @@ export class StakeDelegation {
     */
     static new(pool_id, account) {
         _assertClass(pool_id, PoolId);
+        const ptr0 = pool_id.ptr;
+        pool_id.ptr = 0;
         _assertClass(account, PublicKey);
-        const ret = wasm.stakedelegation_new(pool_id.ptr, account.ptr);
+        const ptr1 = account.ptr;
+        account.ptr = 0;
+        const ret = wasm.stakedelegation_new(ptr0, ptr1);
         return StakeDelegation.__wrap(ret);
     }
 }
@@ -2129,7 +2188,9 @@ export class TransactionBuilder {
     */
     static new_payload(cert) {
         _assertClass(cert, Certificate);
-        const ret = wasm.transactionbuilder_new_payload(cert.ptr);
+        const ptr0 = cert.ptr;
+        cert.ptr = 0;
+        const ret = wasm.transactionbuilder_new_payload(ptr0);
         return TransactionBuilder.__wrap(ret);
     }
     /**
@@ -2138,7 +2199,9 @@ export class TransactionBuilder {
     */
     add_input(input) {
         _assertClass(input, Input);
-        wasm.transactionbuilder_add_input(this.ptr, input.ptr);
+        const ptr0 = input.ptr;
+        input.ptr = 0;
+        wasm.transactionbuilder_add_input(this.ptr, ptr0);
     }
     /**
     * Add output to the transaction
@@ -2147,8 +2210,12 @@ export class TransactionBuilder {
     */
     add_output(address, value) {
         _assertClass(address, Address);
+        const ptr0 = address.ptr;
+        address.ptr = 0;
         _assertClass(value, Value);
-        wasm.transactionbuilder_add_output(this.ptr, address.ptr, value.ptr);
+        const ptr1 = value.ptr;
+        value.ptr = 0;
+        wasm.transactionbuilder_add_output(this.ptr, ptr0, ptr1);
     }
     /**
     * Estimate fee with the currently added inputs, outputs and certificate based on the given algorithm
@@ -2212,7 +2279,9 @@ export class TransactionBuilder {
         this.ptr = 0;
         _assertClass(fee, Fee);
         _assertClass(output_policy, OutputPolicy);
-        const ret = wasm.transactionbuilder_seal_with_output_policy(ptr, fee.ptr, output_policy.ptr);
+        const ptr0 = output_policy.ptr;
+        output_policy.ptr = 0;
+        const ret = wasm.transactionbuilder_seal_with_output_policy(ptr, fee.ptr, ptr0);
         return Transaction.__wrap(ret);
     }
     /**
@@ -2226,7 +2295,9 @@ export class TransactionBuilder {
         this.ptr = 0;
         _assertClass(fee, Fee);
         _assertClass(output_policy, OutputPolicy);
-        const ret = wasm.transactionbuilder_finalize(ptr, fee.ptr, output_policy.ptr);
+        const ptr0 = output_policy.ptr;
+        output_policy.ptr = 0;
+        const ret = wasm.transactionbuilder_finalize(ptr, fee.ptr, ptr0);
         return Transaction.__wrap(ret);
     }
 }
@@ -2271,7 +2342,9 @@ export class TransactionFinalizer {
     */
     constructor(transaction) {
         _assertClass(transaction, Transaction);
-        const ret = wasm.transactionfinalizer_new(transaction.ptr);
+        const ptr0 = transaction.ptr;
+        transaction.ptr = 0;
+        const ret = wasm.transactionfinalizer_new(ptr0);
         return TransactionFinalizer.__wrap(ret);
     }
     /**
@@ -2281,7 +2354,9 @@ export class TransactionFinalizer {
     */
     set_witness(index, witness) {
         _assertClass(witness, Witness);
-        wasm.transactionfinalizer_set_witness(this.ptr, index, witness.ptr);
+        const ptr0 = witness.ptr;
+        witness.ptr = 0;
+        wasm.transactionfinalizer_set_witness(this.ptr, index, ptr0);
     }
     /**
     * Deprecated: Use `get_tx_sign_data_hash` instead\
@@ -2447,8 +2522,12 @@ export class UtxoPointer {
     */
     static new(fragment_id, output_index, value) {
         _assertClass(fragment_id, FragmentId);
+        const ptr0 = fragment_id.ptr;
+        fragment_id.ptr = 0;
         _assertClass(value, Value);
-        const ret = wasm.utxopointer_new(fragment_id.ptr, output_index, value.ptr);
+        const ptr1 = value.ptr;
+        value.ptr = 0;
+        const ret = wasm.utxopointer_new(ptr0, output_index, ptr1);
         return UtxoPointer.__wrap(ret);
     }
 }
@@ -2647,9 +2726,15 @@ export class Witness {
     */
     static for_utxo(genesis_hash, transaction_id, secret_key) {
         _assertClass(genesis_hash, Hash);
+        const ptr0 = genesis_hash.ptr;
+        genesis_hash.ptr = 0;
         _assertClass(transaction_id, TransactionSignDataHash);
+        const ptr1 = transaction_id.ptr;
+        transaction_id.ptr = 0;
         _assertClass(secret_key, PrivateKey);
-        const ret = wasm.witness_for_utxo(genesis_hash.ptr, transaction_id.ptr, secret_key.ptr);
+        const ptr2 = secret_key.ptr;
+        secret_key.ptr = 0;
+        const ret = wasm.witness_for_utxo(ptr0, ptr1, ptr2);
         return Witness.__wrap(ret);
     }
     /**
@@ -2672,10 +2757,18 @@ export class Witness {
     */
     static for_account(genesis_hash, transaction_id, secret_key, account_spending_counter) {
         _assertClass(genesis_hash, Hash);
+        const ptr0 = genesis_hash.ptr;
+        genesis_hash.ptr = 0;
         _assertClass(transaction_id, TransactionSignDataHash);
+        const ptr1 = transaction_id.ptr;
+        transaction_id.ptr = 0;
         _assertClass(secret_key, PrivateKey);
+        const ptr2 = secret_key.ptr;
+        secret_key.ptr = 0;
         _assertClass(account_spending_counter, SpendingCounter);
-        const ret = wasm.witness_for_account(genesis_hash.ptr, transaction_id.ptr, secret_key.ptr, account_spending_counter.ptr);
+        const ptr3 = account_spending_counter.ptr;
+        account_spending_counter.ptr = 0;
+        const ret = wasm.witness_for_account(ptr0, ptr1, ptr2, ptr3);
         return Witness.__wrap(ret);
     }
     /**

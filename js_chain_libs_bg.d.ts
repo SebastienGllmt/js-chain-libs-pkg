@@ -72,6 +72,8 @@ export function __wbg_multisigaddress_free(a: number): void;
 export function multisigaddress_get_merkle_root(a: number, b: number): void;
 export function multisigaddress_to_base_address(a: number): number;
 export function __wbg_address_free(a: number): void;
+export function address_from_bytes(a: number): number;
+export function address_as_bytes(a: number, b: number): void;
 export function address_from_string(a: number, b: number): number;
 export function address_to_string(a: number, b: number, c: number, d: number): void;
 export function address_single_from_public_key(a: number, b: number): number;

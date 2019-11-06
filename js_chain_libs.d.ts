@@ -114,6 +114,15 @@ export class AccountWitness {
 export class Address {
   free(): void;
 /**
+* @param {any} bytes 
+* @returns {Address} 
+*/
+  static from_bytes(bytes: any): Address;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
 * Construct Address from its bech32 representation
 * Example
 * ```javascript
