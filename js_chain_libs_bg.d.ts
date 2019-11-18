@@ -9,6 +9,7 @@ export function bip32privatekey_from_bytes(a: number, b: number): number;
 export function bip32privatekey_as_bytes(a: number, b: number): void;
 export function bip32privatekey_from_bech32(a: number, b: number): number;
 export function bip32privatekey_to_bech32(a: number, b: number): void;
+export function bip32privatekey_from_bip39_entropy(a: number, b: number, c: number, d: number): number;
 export function __wbg_bip32publickey_free(a: number): void;
 export function bip32publickey_derive(a: number, b: number): number;
 export function bip32publickey_to_raw_key(a: number): number;

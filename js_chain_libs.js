@@ -693,6 +693,15 @@ export class Bip32PrivateKey {
         wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
         return v0;
     }
+    /**
+    * @param {Uint8Array} entropy
+    * @param {Uint8Array} password
+    * @returns {Bip32PrivateKey}
+    */
+    static from_bip39_entropy(entropy, password) {
+        const ret = wasm.bip32privatekey_from_bip39_entropy(passArray8ToWasm(entropy), WASM_VECTOR_LEN, passArray8ToWasm(password), WASM_VECTOR_LEN);
+        return Bip32PrivateKey.__wrap(ret);
+    }
 }
 /**
 */

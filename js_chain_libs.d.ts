@@ -305,6 +305,12 @@ export class Bip32PrivateKey {
 * @returns {string} 
 */
   to_bech32(): string;
+/**
+* @param {Uint8Array} entropy 
+* @param {Uint8Array} password 
+* @returns {Bip32PrivateKey} 
+*/
+  static from_bip39_entropy(entropy: Uint8Array, password: Uint8Array): Bip32PrivateKey;
 }
 /**
 */
