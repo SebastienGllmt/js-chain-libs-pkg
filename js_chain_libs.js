@@ -145,6 +145,9 @@ export const AddressDiscrimination = Object.freeze({ Production:0,Test:1, });
 */
 export const AddressKind = Object.freeze({ Single:0,Group:1,Account:2,Multisig:3, });
 /**
+*/
+export const CertificateType = Object.freeze({ StakeDelegation:0,OwnerStakeDelegation:1,PoolRegistration:2,PoolRetirement:3,PoolUpdate:4, });
+/**
 * This is either an single account or a multisig account depending on the witness type
 */
 export class Account {
@@ -183,11 +186,9 @@ export class Account {
     * @param {PublicKey} key
     * @returns {Account}
     */
-    static from_public_key(key) {
+    static single_from_public_key(key) {
         _assertClass(key, PublicKey);
-        const ptr0 = key.ptr;
-        key.ptr = 0;
-        const ret = wasm.account_from_public_key(ptr0);
+        const ret = wasm.account_single_from_public_key(key.ptr);
         return Account.__wrap(ret);
     }
     /**
@@ -232,6 +233,35 @@ export class AccountAddress {
 }
 /**
 */
+export class AccountBindingSignature {
+
+    static __wrap(ptr) {
+        const obj = Object.create(AccountBindingSignature.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_accountbindingsignature_free(ptr);
+    }
+    /**
+    * @param {PrivateKey} private_key
+    * @param {TransactionBindingAuthData} auth_data
+    * @returns {AccountBindingSignature}
+    */
+    static new_single(private_key, auth_data) {
+        _assertClass(private_key, PrivateKey);
+        _assertClass(auth_data, TransactionBindingAuthData);
+        const ret = wasm.accountbindingsignature_new_single(private_key.ptr, auth_data.ptr);
+        return AccountBindingSignature.__wrap(ret);
+    }
+}
+/**
+*/
 export class AccountIdentifier {
 
     static __wrap(ptr) {
@@ -257,6 +287,20 @@ export class AccountIdentifier {
         const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
         wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
         return v0;
+    }
+    /**
+    * @returns {Account}
+    */
+    to_account_single() {
+        const ret = wasm.accountidentifier_to_account_single(this.ptr);
+        return Account.__wrap(ret);
+    }
+    /**
+    * @returns {Account}
+    */
+    to_account_multi() {
+        const ret = wasm.accountidentifier_to_account_multi(this.ptr);
+        return Account.__wrap(ret);
     }
 }
 /**
@@ -500,40 +544,6 @@ export class Address {
     to_multisig_address() {
         const ret = wasm.address_to_multisig_address(this.ptr);
         return ret === 0 ? undefined : MultisigAddress.__wrap(ret);
-    }
-}
-/**
-* Type for representing a Transaction with Witnesses (signatures)
-*/
-export class AuthenticatedTransaction {
-
-    static __wrap(ptr) {
-        const obj = Object.create(AuthenticatedTransaction.prototype);
-        obj.ptr = ptr;
-
-        return obj;
-    }
-
-    free() {
-        const ptr = this.ptr;
-        this.ptr = 0;
-
-        wasm.__wbg_authenticatedtransaction_free(ptr);
-    }
-    /**
-    * Get a copy of the inner Transaction, discarding the signatures
-    * @returns {Transaction}
-    */
-    transaction() {
-        const ret = wasm.authenticatedtransaction_transaction(this.ptr);
-        return Transaction.__wrap(ret);
-    }
-    /**
-    * @returns {Witnesses}
-    */
-    witnesses() {
-        const ret = wasm.authenticatedtransaction_witnesses(this.ptr);
-        return Witnesses.__wrap(ret);
     }
 }
 /**
@@ -848,6 +858,41 @@ export class Block {
         const ret = wasm.block_fragments(this.ptr);
         return Fragments.__wrap(ret);
     }
+    /**
+    * @returns {number}
+    */
+    epoch() {
+        const ret = wasm.block_epoch(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @returns {number}
+    */
+    slot() {
+        const ret = wasm.block_slot(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @returns {number}
+    */
+    chain_length() {
+        const ret = wasm.block_chain_length(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @returns {PoolId}
+    */
+    leader_id() {
+        const ret = wasm.block_leader_id(this.ptr);
+        return ret === 0 ? undefined : PoolId.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    content_size() {
+        const ret = wasm.block_content_size(this.ptr);
+        return ret >>> 0;
+    }
 }
 /**
 */
@@ -902,9 +947,7 @@ export class Certificate {
     */
     static stake_delegation(stake_delegation) {
         _assertClass(stake_delegation, StakeDelegation);
-        const ptr0 = stake_delegation.ptr;
-        stake_delegation.ptr = 0;
-        const ret = wasm.certificate_stake_delegation(ptr0);
+        const ret = wasm.certificate_stake_delegation(stake_delegation.ptr);
         return Certificate.__wrap(ret);
     }
     /**
@@ -914,19 +957,139 @@ export class Certificate {
     */
     static stake_pool_registration(pool_registration) {
         _assertClass(pool_registration, PoolRegistration);
-        const ptr0 = pool_registration.ptr;
-        pool_registration.ptr = 0;
-        const ret = wasm.certificate_stake_pool_registration(ptr0);
+        const ret = wasm.certificate_stake_pool_registration(pool_registration.ptr);
         return Certificate.__wrap(ret);
     }
     /**
-    * @param {PrivateKey} private_key
+    * Create a Certificate for PoolRetirement
+    * @param {PoolRetirement} pool_retirement
+    * @returns {Certificate}
     */
-    sign(private_key) {
-        _assertClass(private_key, PrivateKey);
-        const ptr0 = private_key.ptr;
-        private_key.ptr = 0;
-        wasm.certificate_sign(this.ptr, ptr0);
+    static stake_pool_retirement(pool_retirement) {
+        _assertClass(pool_retirement, PoolRetirement);
+        const ret = wasm.certificate_stake_pool_retirement(pool_retirement.ptr);
+        return Certificate.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    get_type() {
+        const ret = wasm.certificate_get_type(this.ptr);
+        return ret;
+    }
+    /**
+    * @returns {StakeDelegation}
+    */
+    get_stake_delegation() {
+        const ret = wasm.certificate_get_stake_delegation(this.ptr);
+        return StakeDelegation.__wrap(ret);
+    }
+    /**
+    * @returns {OwnerStakeDelegation}
+    */
+    get_owner_stake_delegation() {
+        const ret = wasm.certificate_get_owner_stake_delegation(this.ptr);
+        return OwnerStakeDelegation.__wrap(ret);
+    }
+    /**
+    * @returns {PoolRegistration}
+    */
+    get_pool_registration() {
+        const ret = wasm.certificate_get_pool_registration(this.ptr);
+        return PoolRegistration.__wrap(ret);
+    }
+    /**
+    * @returns {PoolRetirement}
+    */
+    get_pool_retirement() {
+        const ret = wasm.certificate_get_pool_retirement(this.ptr);
+        return PoolRetirement.__wrap(ret);
+    }
+}
+/**
+* Delegation Ratio type express a number of parts
+* and a list of pools and their individual parts
+*
+* E.g. parts: 7, pools: [(A,2), (B,1), (C,4)] means that
+* A is associated with 2/7 of the stake, B has 1/7 of stake and C
+* has 4/7 of the stake.
+*
+* It\'s invalid to have less than 2 elements in the array,
+* and by extension parts need to be equal to the sum of individual
+* pools parts.
+*/
+export class DelegationRatio {
+
+    static __wrap(ptr) {
+        const obj = Object.create(DelegationRatio.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_delegationratio_free(ptr);
+    }
+    /**
+    * @param {number} parts
+    * @param {PoolDelegationRatios} pools
+    * @returns {DelegationRatio}
+    */
+    static new(parts, pools) {
+        _assertClass(pools, PoolDelegationRatios);
+        const ret = wasm.delegationratio_new(parts, pools.ptr);
+        return ret === 0 ? undefined : DelegationRatio.__wrap(ret);
+    }
+}
+/**
+* Set the choice of delegation:
+*
+* * No delegation
+* * Full delegation of this account to a specific pool
+* * Ratio of stake to multiple pools
+*/
+export class DelegationType {
+
+    static __wrap(ptr) {
+        const obj = Object.create(DelegationType.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_delegationtype_free(ptr);
+    }
+    /**
+    * @returns {DelegationType}
+    */
+    static non_delegated() {
+        const ret = wasm.delegationtype_non_delegated();
+        return DelegationType.__wrap(ret);
+    }
+    /**
+    * @param {PoolId} pool_id
+    * @returns {DelegationType}
+    */
+    static full(pool_id) {
+        _assertClass(pool_id, PoolId);
+        const ret = wasm.delegationtype_full(pool_id.ptr);
+        return DelegationType.__wrap(ret);
+    }
+    /**
+    * @param {DelegationRatio} r
+    * @returns {DelegationType}
+    */
+    static ratio(r) {
+        _assertClass(r, DelegationRatio);
+        const ret = wasm.delegationtype_ratio(r.ptr);
+        return DelegationType.__wrap(ret);
     }
 }
 /**
@@ -1006,7 +1169,7 @@ export class Ed25519Signature {
 }
 /**
 * Algorithm used to compute transaction fees
-* Currently the only implementation if the Linear one
+* Currently the only implementation is the Linear one
 */
 export class Fee {
 
@@ -1032,28 +1195,19 @@ export class Fee {
     */
     static linear_fee(constant, coefficient, certificate) {
         _assertClass(constant, Value);
-        const ptr0 = constant.ptr;
-        constant.ptr = 0;
         _assertClass(coefficient, Value);
-        const ptr1 = coefficient.ptr;
-        coefficient.ptr = 0;
         _assertClass(certificate, Value);
-        const ptr2 = certificate.ptr;
-        certificate.ptr = 0;
-        const ret = wasm.fee_linear_fee(ptr0, ptr1, ptr2);
+        const ret = wasm.fee_linear_fee(constant.ptr, coefficient.ptr, certificate.ptr);
         return Fee.__wrap(ret);
     }
     /**
-    * Compute the fee if possible (it can fail in case the values are out of range)
     * @param {Transaction} tx
     * @returns {Value}
     */
     calculate(tx) {
         _assertClass(tx, Transaction);
-        const ptr0 = tx.ptr;
-        tx.ptr = 0;
-        const ret = wasm.fee_calculate(this.ptr, ptr0);
-        return ret === 0 ? undefined : Value.__wrap(ret);
+        const ret = wasm.fee_calculate(this.ptr, tx.ptr);
+        return Value.__wrap(ret);
     }
 }
 /**
@@ -1075,37 +1229,23 @@ export class Fragment {
         wasm.__wbg_fragment_free(ptr);
     }
     /**
-    * @param {AuthenticatedTransaction} tx
+    * @param {Transaction} tx
     * @returns {Fragment}
     */
-    static from_authenticated_transaction(tx) {
-        _assertClass(tx, AuthenticatedTransaction);
-        const ptr0 = tx.ptr;
-        tx.ptr = 0;
-        const ret = wasm.fragment_from_authenticated_transaction(ptr0);
-        return Fragment.__wrap(ret);
-    }
-    /**
-    * Deprecated: Use `from_authenticated_transaction` instead
-    * @param {AuthenticatedTransaction} tx
-    * @returns {Fragment}
-    */
-    static from_generated_transaction(tx) {
-        _assertClass(tx, AuthenticatedTransaction);
-        const ptr0 = tx.ptr;
-        tx.ptr = 0;
-        const ret = wasm.fragment_from_generated_transaction(ptr0);
+    static from_transaction(tx) {
+        _assertClass(tx, Transaction);
+        const ret = wasm.fragment_from_transaction(tx.ptr);
         return Fragment.__wrap(ret);
     }
     /**
     * Get a Transaction if the Fragment represents one
-    * @returns {AuthenticatedTransaction}
+    * @returns {Transaction}
     */
     get_transaction() {
         const ptr = this.ptr;
         this.ptr = 0;
         const ret = wasm.fragment_get_transaction(ptr);
-        return AuthenticatedTransaction.__wrap(ret);
+        return Transaction.__wrap(ret);
     }
     /**
     * @returns {Uint8Array}
@@ -1156,8 +1296,15 @@ export class Fragment {
     /**
     * @returns {boolean}
     */
-    is_pool_management() {
-        const ret = wasm.fragment_is_pool_management(this.ptr);
+    is_pool_retirement() {
+        const ret = wasm.fragment_is_pool_retirement(this.ptr);
+        return ret !== 0;
+    }
+    /**
+    * @returns {boolean}
+    */
+    is_pool_update() {
+        const ret = wasm.fragment_is_pool_update(this.ptr);
         return ret !== 0;
     }
     /**
@@ -1244,6 +1391,13 @@ export class Fragments {
         wasm.__wbg_fragments_free(ptr);
     }
     /**
+    * @returns {Fragments}
+    */
+    static new() {
+        const ret = wasm.fragments_new();
+        return Fragments.__wrap(ret);
+    }
+    /**
     * @returns {number}
     */
     size() {
@@ -1257,6 +1411,15 @@ export class Fragments {
     get(index) {
         const ret = wasm.fragments_get(this.ptr, index);
         return Fragment.__wrap(ret);
+    }
+    /**
+    * @param {Fragment} item
+    */
+    add(item) {
+        _assertClass(item, Fragment);
+        const ptr0 = item.ptr;
+        item.ptr = 0;
+        wasm.fragments_add(this.ptr, ptr0);
     }
 }
 /**
@@ -1346,6 +1509,83 @@ export class Hash {
 }
 /**
 */
+export class IndexSignatures {
+
+    static __wrap(ptr) {
+        const obj = Object.create(IndexSignatures.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_indexsignatures_free(ptr);
+    }
+    /**
+    * @returns {IndexSignatures}
+    */
+    static new() {
+        const ret = wasm.indexsignatures_new();
+        return IndexSignatures.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    size() {
+        const ret = wasm.indexsignatures_size(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} index
+    * @returns {IndexedSignature}
+    */
+    get(index) {
+        const ret = wasm.indexsignatures_get(this.ptr, index);
+        return IndexedSignature.__wrap(ret);
+    }
+    /**
+    * @param {IndexedSignature} item
+    */
+    add(item) {
+        _assertClass(item, IndexedSignature);
+        const ptr0 = item.ptr;
+        item.ptr = 0;
+        wasm.indexsignatures_add(this.ptr, ptr0);
+    }
+}
+/**
+*/
+export class IndexedSignature {
+
+    static __wrap(ptr) {
+        const obj = Object.create(IndexedSignature.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_indexedsignature_free(ptr);
+    }
+    /**
+    * @param {number} index
+    * @param {AccountBindingSignature} signature
+    * @returns {IndexedSignature}
+    */
+    static new(index, signature) {
+        _assertClass(signature, AccountBindingSignature);
+        const ret = wasm.indexedsignature_new(index, signature.ptr);
+        return IndexedSignature.__wrap(ret);
+    }
+}
+/**
+*/
 export class Input {
 
     static __wrap(ptr) {
@@ -1378,9 +1618,7 @@ export class Input {
     static from_account(account, v) {
         _assertClass(account, Account);
         _assertClass(v, Value);
-        const ptr0 = v.ptr;
-        v.ptr = 0;
-        const ret = wasm.input_from_account(account.ptr, ptr0);
+        const ret = wasm.input_from_account(account.ptr, v.ptr);
         return Input.__wrap(ret);
     }
     /**
@@ -1426,11 +1664,155 @@ export class Input {
     }
     /**
     * Get the source Account if the Input type is Account
-    * @returns {Account}
+    * @returns {AccountIdentifier}
     */
-    get_account() {
-        const ret = wasm.input_get_account(this.ptr);
-        return Account.__wrap(ret);
+    get_account_identifier() {
+        const ret = wasm.input_get_account_identifier(this.ptr);
+        return AccountIdentifier.__wrap(ret);
+    }
+}
+/**
+*/
+export class InputOutput {
+
+    static __wrap(ptr) {
+        const obj = Object.create(InputOutput.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_inputoutput_free(ptr);
+    }
+    /**
+    * @returns {Inputs}
+    */
+    inputs() {
+        const ret = wasm.inputoutput_inputs(this.ptr);
+        return Inputs.__wrap(ret);
+    }
+    /**
+    * @returns {Outputs}
+    */
+    outputs() {
+        const ret = wasm.inputoutput_outputs(this.ptr);
+        return Outputs.__wrap(ret);
+    }
+}
+/**
+*/
+export class InputOutputBuilder {
+
+    static __wrap(ptr) {
+        const obj = Object.create(InputOutputBuilder.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_inputoutputbuilder_free(ptr);
+    }
+    /**
+    * @returns {InputOutputBuilder}
+    */
+    static empty() {
+        const ret = wasm.inputoutputbuilder_empty();
+        return InputOutputBuilder.__wrap(ret);
+    }
+    /**
+    * Add input to the IO Builder
+    * @param {Input} input
+    */
+    add_input(input) {
+        _assertClass(input, Input);
+        wasm.inputoutputbuilder_add_input(this.ptr, input.ptr);
+    }
+    /**
+    * Add output to the IO Builder
+    * @param {Address} address
+    * @param {Value} value
+    */
+    add_output(address, value) {
+        _assertClass(address, Address);
+        _assertClass(value, Value);
+        wasm.inputoutputbuilder_add_output(this.ptr, address.ptr, value.ptr);
+    }
+    /**
+    * Estimate fee with the currently added inputs, outputs and certificate based on the given algorithm
+    * @param {Fee} fee
+    * @param {Payload} payload
+    * @returns {Value}
+    */
+    estimate_fee(fee, payload) {
+        _assertClass(fee, Fee);
+        _assertClass(payload, Payload);
+        const ret = wasm.inputoutputbuilder_estimate_fee(this.ptr, fee.ptr, payload.ptr);
+        return Value.__wrap(ret);
+    }
+    /**
+    * @param {Payload} payload
+    * @param {Fee} fee
+    * @returns {Balance}
+    */
+    get_balance(payload, fee) {
+        _assertClass(payload, Payload);
+        _assertClass(fee, Fee);
+        const ret = wasm.inputoutputbuilder_get_balance(this.ptr, payload.ptr, fee.ptr);
+        return Balance.__wrap(ret);
+    }
+    /**
+    * @returns {Balance}
+    */
+    get_balance_without_fee() {
+        const ret = wasm.inputoutputbuilder_get_balance_without_fee(this.ptr);
+        return Balance.__wrap(ret);
+    }
+    /**
+    * @returns {InputOutput}
+    */
+    build() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+        const ret = wasm.inputoutputbuilder_build(ptr);
+        return InputOutput.__wrap(ret);
+    }
+    /**
+    * Seal the transaction by passing fee rule
+    * @param {Payload} payload
+    * @param {Fee} fee_algorithm
+    * @returns {InputOutput}
+    */
+    seal(payload, fee_algorithm) {
+        const ptr = this.ptr;
+        this.ptr = 0;
+        _assertClass(payload, Payload);
+        _assertClass(fee_algorithm, Fee);
+        const ret = wasm.inputoutputbuilder_seal(ptr, payload.ptr, fee_algorithm.ptr);
+        return InputOutput.__wrap(ret);
+    }
+    /**
+    * Seal the transaction by passing fee rule and the output policy
+    * @param {Payload} payload
+    * @param {Fee} fee_algorithm
+    * @param {OutputPolicy} policy
+    * @returns {InputOutput}
+    */
+    seal_with_output_policy(payload, fee_algorithm, policy) {
+        const ptr = this.ptr;
+        this.ptr = 0;
+        _assertClass(payload, Payload);
+        _assertClass(fee_algorithm, Fee);
+        _assertClass(policy, OutputPolicy);
+        const ret = wasm.inputoutputbuilder_seal_with_output_policy(ptr, payload.ptr, fee_algorithm.ptr, policy.ptr);
+        return InputOutput.__wrap(ret);
     }
 }
 /**
@@ -1451,6 +1833,13 @@ export class Inputs {
         wasm.__wbg_inputs_free(ptr);
     }
     /**
+    * @returns {Inputs}
+    */
+    static new() {
+        const ret = wasm.inputs_new();
+        return Inputs.__wrap(ret);
+    }
+    /**
     * @returns {number}
     */
     size() {
@@ -1464,6 +1853,15 @@ export class Inputs {
     get(index) {
         const ret = wasm.inputs_get(this.ptr, index);
         return Input.__wrap(ret);
+    }
+    /**
+    * @param {Input} item
+    */
+    add(item) {
+        _assertClass(item, Input);
+        const ptr0 = item.ptr;
+        item.ptr = 0;
+        wasm.inputs_add(this.ptr, ptr0);
     }
 }
 /**
@@ -1490,6 +1888,81 @@ export class KesPublicKey {
     static from_bech32(bech32_str) {
         const ret = wasm.kespublickey_from_bech32(passStringToWasm(bech32_str), WASM_VECTOR_LEN);
         return KesPublicKey.__wrap(ret);
+    }
+}
+/**
+*/
+export class LegacyUtxoWitness {
+
+    static __wrap(ptr) {
+        const obj = Object.create(LegacyUtxoWitness.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_legacyutxowitness_free(ptr);
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    as_bytes() {
+        const retptr = 8;
+        const ret = wasm.legacyutxowitness_as_bytes(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @returns {string}
+    */
+    to_bech32() {
+        const retptr = 8;
+        const ret = wasm.legacyutxowitness_to_bech32(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @returns {string}
+    */
+    to_hex() {
+        const retptr = 8;
+        const ret = wasm.legacyutxowitness_to_hex(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @param {Uint8Array} bytes
+    * @returns {LegacyUtxoWitness}
+    */
+    static from_bytes(bytes) {
+        const ret = wasm.legacyutxowitness_from_bytes(passArray8ToWasm(bytes), WASM_VECTOR_LEN);
+        return LegacyUtxoWitness.__wrap(ret);
+    }
+    /**
+    * @param {string} bech32_str
+    * @returns {LegacyUtxoWitness}
+    */
+    static from_bech32(bech32_str) {
+        const ret = wasm.legacyutxowitness_from_bech32(passStringToWasm(bech32_str), WASM_VECTOR_LEN);
+        return LegacyUtxoWitness.__wrap(ret);
+    }
+    /**
+    * @param {string} input
+    * @returns {LegacyUtxoWitness}
+    */
+    static from_hex(input) {
+        const ret = wasm.legacyutxowitness_from_hex(passStringToWasm(input), WASM_VECTOR_LEN);
+        return LegacyUtxoWitness.__wrap(ret);
     }
 }
 /**
@@ -1596,9 +2069,7 @@ export class OutputPolicy {
     */
     static one(address) {
         _assertClass(address, Address);
-        const ptr0 = address.ptr;
-        address.ptr = 0;
-        const ret = wasm.outputpolicy_one(ptr0);
+        const ret = wasm.outputpolicy_one(address.ptr);
         return OutputPolicy.__wrap(ret);
     }
 }
@@ -1620,6 +2091,13 @@ export class Outputs {
         wasm.__wbg_outputs_free(ptr);
     }
     /**
+    * @returns {Outputs}
+    */
+    static new() {
+        const ret = wasm.outputs_new();
+        return Outputs.__wrap(ret);
+    }
+    /**
     * @returns {number}
     */
     size() {
@@ -1633,6 +2111,228 @@ export class Outputs {
     get(index) {
         const ret = wasm.outputs_get(this.ptr, index);
         return Output.__wrap(ret);
+    }
+    /**
+    * @param {Output} item
+    */
+    add(item) {
+        _assertClass(item, Output);
+        const ptr0 = item.ptr;
+        item.ptr = 0;
+        wasm.outputs_add(this.ptr, ptr0);
+    }
+}
+/**
+*/
+export class OwnerStakeDelegation {
+
+    static __wrap(ptr) {
+        const obj = Object.create(OwnerStakeDelegation.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_ownerstakedelegation_free(ptr);
+    }
+    /**
+    * @param {DelegationType} delegation_type
+    * @returns {OwnerStakeDelegation}
+    */
+    static new(delegation_type) {
+        _assertClass(delegation_type, DelegationType);
+        const ret = wasm.ownerstakedelegation_new(delegation_type.ptr);
+        return OwnerStakeDelegation.__wrap(ret);
+    }
+    /**
+    * @returns {DelegationType}
+    */
+    delegation_type() {
+        const ret = wasm.ownerstakedelegation_delegation_type(this.ptr);
+        return DelegationType.__wrap(ret);
+    }
+}
+/**
+*/
+export class Payload {
+
+    static __wrap(ptr) {
+        const obj = Object.create(Payload.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_payload_free(ptr);
+    }
+    /**
+    * @returns {Payload}
+    */
+    static no_payload() {
+        const ret = wasm.payload_no_payload();
+        return Payload.__wrap(ret);
+    }
+    /**
+    * @param {Certificate} certificate
+    * @returns {Payload}
+    */
+    static certificate(certificate) {
+        _assertClass(certificate, Certificate);
+        const ret = wasm.payload_certificate(certificate.ptr);
+        return Payload.__wrap(ret);
+    }
+}
+/**
+*/
+export class PayloadAuthData {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PayloadAuthData.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_payloadauthdata_free(ptr);
+    }
+    /**
+    * @returns {PayloadAuthData}
+    */
+    static for_no_payload() {
+        const ret = wasm.payloadauthdata_for_no_payload();
+        return PayloadAuthData.__wrap(ret);
+    }
+    /**
+    * @returns {PayloadAuthData}
+    */
+    static for_owner_stake_delegation() {
+        const ret = wasm.payloadauthdata_for_owner_stake_delegation();
+        return PayloadAuthData.__wrap(ret);
+    }
+    /**
+    * @param {StakeDelegationAuthData} auth_data
+    * @returns {PayloadAuthData}
+    */
+    static for_stake_delegation(auth_data) {
+        _assertClass(auth_data, StakeDelegationAuthData);
+        const ret = wasm.payloadauthdata_for_stake_delegation(auth_data.ptr);
+        return PayloadAuthData.__wrap(ret);
+    }
+    /**
+    * @param {PoolRegistrationAuthData} auth_data
+    * @returns {PayloadAuthData}
+    */
+    static for_pool_registration(auth_data) {
+        _assertClass(auth_data, PoolRegistrationAuthData);
+        const ret = wasm.payloadauthdata_for_pool_registration(auth_data.ptr);
+        return PayloadAuthData.__wrap(ret);
+    }
+    /**
+    * @param {PoolRetirementAuthData} auth_data
+    * @returns {PayloadAuthData}
+    */
+    static for_pool_retirement(auth_data) {
+        _assertClass(auth_data, PoolRetirementAuthData);
+        const ret = wasm.payloadauthdata_for_pool_retirement(auth_data.ptr);
+        return PayloadAuthData.__wrap(ret);
+    }
+    /**
+    * @param {PoolUpdateAuthData} auth_data
+    * @returns {PayloadAuthData}
+    */
+    static for_pool_update(auth_data) {
+        _assertClass(auth_data, PoolUpdateAuthData);
+        const ret = wasm.payloadauthdata_for_pool_update(auth_data.ptr);
+        return PayloadAuthData.__wrap(ret);
+    }
+}
+/**
+*/
+export class PoolDelegationRatio {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PoolDelegationRatio.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_pooldelegationratio_free(ptr);
+    }
+    /**
+    * @param {PoolId} pool
+    * @param {number} part
+    * @returns {PoolDelegationRatio}
+    */
+    static new(pool, part) {
+        _assertClass(pool, PoolId);
+        const ret = wasm.pooldelegationratio_new(pool.ptr, part);
+        return PoolDelegationRatio.__wrap(ret);
+    }
+}
+/**
+*/
+export class PoolDelegationRatios {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PoolDelegationRatios.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_pooldelegationratios_free(ptr);
+    }
+    /**
+    * @returns {PoolDelegationRatios}
+    */
+    static new() {
+        const ret = wasm.pooldelegationratios_new();
+        return PoolDelegationRatios.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    size() {
+        const ret = wasm.pooldelegationratios_size(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} index
+    * @returns {PoolDelegationRatio}
+    */
+    get(index) {
+        const ret = wasm.pooldelegationratios_get(this.ptr, index);
+        return PoolDelegationRatio.__wrap(ret);
+    }
+    /**
+    * @param {PoolDelegationRatio} item
+    */
+    add(item) {
+        _assertClass(item, PoolDelegationRatio);
+        const ptr0 = item.ptr;
+        item.ptr = 0;
+        wasm.pooldelegationratios_add(this.ptr, ptr0);
     }
 }
 /**
@@ -1692,29 +2392,21 @@ export class PoolRegistration {
     /**
     * @param {U128} serial
     * @param {PublicKeys} owners
+    * @param {PublicKeys} operators
     * @param {number} management_threshold
     * @param {TimeOffsetSeconds} start_validity
     * @param {KesPublicKey} kes_public_key
     * @param {VrfPublicKey} vrf_public_key
     * @returns {PoolRegistration}
     */
-    constructor(serial, owners, management_threshold, start_validity, kes_public_key, vrf_public_key) {
+    constructor(serial, owners, operators, management_threshold, start_validity, kes_public_key, vrf_public_key) {
         _assertClass(serial, U128);
-        const ptr0 = serial.ptr;
-        serial.ptr = 0;
         _assertClass(owners, PublicKeys);
-        const ptr1 = owners.ptr;
-        owners.ptr = 0;
+        _assertClass(operators, PublicKeys);
         _assertClass(start_validity, TimeOffsetSeconds);
-        const ptr2 = start_validity.ptr;
-        start_validity.ptr = 0;
         _assertClass(kes_public_key, KesPublicKey);
-        const ptr3 = kes_public_key.ptr;
-        kes_public_key.ptr = 0;
         _assertClass(vrf_public_key, VrfPublicKey);
-        const ptr4 = vrf_public_key.ptr;
-        vrf_public_key.ptr = 0;
-        const ret = wasm.poolregistration_new(ptr0, ptr1, management_threshold, ptr2, ptr3, ptr4);
+        const ret = wasm.poolregistration_new(serial.ptr, owners.ptr, operators.ptr, management_threshold, start_validity.ptr, kes_public_key.ptr, vrf_public_key.ptr);
         return PoolRegistration.__wrap(ret);
     }
     /**
@@ -1723,6 +2415,126 @@ export class PoolRegistration {
     id() {
         const ret = wasm.poolregistration_id(this.ptr);
         return PoolId.__wrap(ret);
+    }
+    /**
+    * @returns {TimeOffsetSeconds}
+    */
+    start_validity() {
+        const ret = wasm.poolregistration_start_validity(this.ptr);
+        return TimeOffsetSeconds.__wrap(ret);
+    }
+    /**
+    * @returns {PublicKeys}
+    */
+    owners() {
+        const ret = wasm.poolregistration_owners(this.ptr);
+        return PublicKeys.__wrap(ret);
+    }
+    /**
+    * @returns {TaxType}
+    */
+    rewards() {
+        const ret = wasm.poolregistration_rewards(this.ptr);
+        return TaxType.__wrap(ret);
+    }
+}
+/**
+*/
+export class PoolRegistrationAuthData {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PoolRegistrationAuthData.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_poolregistrationauthdata_free(ptr);
+    }
+    /**
+    * @param {IndexSignatures} signatures
+    * @returns {PoolRegistrationAuthData}
+    */
+    static new(signatures) {
+        _assertClass(signatures, IndexSignatures);
+        const ret = wasm.poolregistrationauthdata_new(signatures.ptr);
+        return PoolRegistrationAuthData.__wrap(ret);
+    }
+}
+/**
+*/
+export class PoolRetirement {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PoolRetirement.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_poolretirement_free(ptr);
+    }
+}
+/**
+*/
+export class PoolRetirementAuthData {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PoolRetirementAuthData.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_poolretirementauthdata_free(ptr);
+    }
+    /**
+    * @param {IndexSignatures} signatures
+    * @returns {PoolRetirementAuthData}
+    */
+    static new(signatures) {
+        _assertClass(signatures, IndexSignatures);
+        const ret = wasm.poolretirementauthdata_new(signatures.ptr);
+        return PoolRetirementAuthData.__wrap(ret);
+    }
+}
+/**
+*/
+export class PoolUpdateAuthData {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PoolUpdateAuthData.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_poolupdateauthdata_free(ptr);
+    }
+    /**
+    * @param {IndexSignatures} signatures
+    * @returns {PoolUpdateAuthData}
+    */
+    static new(signatures) {
+        _assertClass(signatures, IndexSignatures);
+        const ret = wasm.poolupdateauthdata_new(signatures.ptr);
+        return PoolUpdateAuthData.__wrap(ret);
     }
 }
 /**
@@ -1943,9 +2755,7 @@ export class PublicKeys {
     */
     add(key) {
         _assertClass(key, PublicKey);
-        const ptr0 = key.ptr;
-        key.ptr = 0;
-        wasm.publickeys_add(this.ptr, ptr0);
+        wasm.publickeys_add(this.ptr, key.ptr);
     }
 }
 /**
@@ -2032,19 +2842,74 @@ export class StakeDelegation {
     }
     /**
     * Create a stake delegation object from account (stake key) to pool_id
-    * @param {PoolId} pool_id
+    * @param {DelegationType} delegation_type
     * @param {PublicKey} account
     * @returns {StakeDelegation}
     */
-    static new(pool_id, account) {
-        _assertClass(pool_id, PoolId);
-        const ptr0 = pool_id.ptr;
-        pool_id.ptr = 0;
+    static new(delegation_type, account) {
+        _assertClass(delegation_type, DelegationType);
         _assertClass(account, PublicKey);
-        const ptr1 = account.ptr;
-        account.ptr = 0;
-        const ret = wasm.stakedelegation_new(ptr0, ptr1);
+        const ret = wasm.stakedelegation_new(delegation_type.ptr, account.ptr);
         return StakeDelegation.__wrap(ret);
+    }
+    /**
+    * @returns {DelegationType}
+    */
+    delegation_type() {
+        const ret = wasm.stakedelegation_delegation_type(this.ptr);
+        return DelegationType.__wrap(ret);
+    }
+    /**
+    * @returns {AccountIdentifier}
+    */
+    account() {
+        const ret = wasm.stakedelegation_account(this.ptr);
+        return AccountIdentifier.__wrap(ret);
+    }
+}
+/**
+*/
+export class StakeDelegationAuthData {
+
+    static __wrap(ptr) {
+        const obj = Object.create(StakeDelegationAuthData.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_stakedelegationauthdata_free(ptr);
+    }
+    /**
+    * @param {AccountBindingSignature} signature
+    * @returns {StakeDelegationAuthData}
+    */
+    static new(signature) {
+        _assertClass(signature, AccountBindingSignature);
+        const ret = wasm.stakedelegationauthdata_new(signature.ptr);
+        return StakeDelegationAuthData.__wrap(ret);
+    }
+}
+/**
+*/
+export class TaxType {
+
+    static __wrap(ptr) {
+        const obj = Object.create(TaxType.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_taxtype_free(ptr);
     }
 }
 /**
@@ -2072,6 +2937,17 @@ export class TimeOffsetSeconds {
     static from_string(number) {
         const ret = wasm.timeoffsetseconds_from_string(passStringToWasm(number), WASM_VECTOR_LEN);
         return TimeOffsetSeconds.__wrap(ret);
+    }
+    /**
+    * @returns {string}
+    */
+    to_string() {
+        const retptr = 8;
+        const ret = wasm.timeoffsetseconds_to_string(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
     }
 }
 /**
@@ -2101,6 +2977,13 @@ export class Transaction {
         return TransactionSignDataHash.__wrap(ret);
     }
     /**
+    * @returns {Witnesses}
+    */
+    witnesses() {
+        const ret = wasm.transaction_witnesses(this.ptr);
+        return Witnesses.__wrap(ret);
+    }
+    /**
     * Get collection of the inputs in the transaction (this allocates new copies of all the values)
     * @returns {Inputs}
     */
@@ -2117,11 +3000,29 @@ export class Transaction {
         return Outputs.__wrap(ret);
     }
     /**
-    * @returns {Transaction}
+    * @returns {Certificate}
     */
-    clone() {
-        const ret = wasm.transaction_clone(this.ptr);
-        return Transaction.__wrap(ret);
+    certificate() {
+        const ret = wasm.transaction_certificate(this.ptr);
+        return ret === 0 ? undefined : Certificate.__wrap(ret);
+    }
+}
+/**
+*/
+export class TransactionBindingAuthData {
+
+    static __wrap(ptr) {
+        const obj = Object.create(TransactionBindingAuthData.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_transactionbindingauthdata_free(ptr);
     }
 }
 /**
@@ -2130,33 +3031,6 @@ export class Transaction {
 * Example
 *
 * ```javascript
-* const txbuilder = new TransactionBuilder();
-*
-* const account = Account.from_address(Address.from_string(
-*   &#39;ca1qh9u0nxmnfg7af8ycuygx57p5xgzmnmgtaeer9xun7hly6mlgt3pj2xk344&#39;
-* ));
-*
-* const input = Input.from_account(account, Value.from_str(\'1000\'));
-*
-* txbuilder.add_input(input);
-*
-* txbuilder.add_output(
-*   Address.from_string(
-*     &#39;ca1q5nr5pvt9e5p009strshxndrsx5etcentslp2rwj6csm8sfk24a2w3swacn&#39;
-*   ),
-*   Value.from_str(\'500\')
-* );
-*
-* const feeAlgorithm = Fee.linear_fee(
-*   Value.from_str(\'20\'),
-*   Value.from_str(\'5\'),
-*   Value.from_str(\'0\')
-* );
-*
-* const finalizedTx = txbuilder.finalize(
-*   feeAlgorithm,
-*   OutputPolicy.one(accountInputAddress)
-* );
 * ```
 */
 export class TransactionBuilder {
@@ -2175,7 +3049,6 @@ export class TransactionBuilder {
         wasm.__wbg_transactionbuilder_free(ptr);
     }
     /**
-    * Deprecated. Use `new_no_payload()` instead
     * @returns {TransactionBuilder}
     */
     constructor() {
@@ -2183,157 +3056,32 @@ export class TransactionBuilder {
         return TransactionBuilder.__wrap(ret);
     }
     /**
-    * Create a TransactionBuilder for a transaction without certificate
-    * @returns {TransactionBuilder}
-    */
-    static new_no_payload() {
-        const ret = wasm.transactionbuilder_new_no_payload();
-        return TransactionBuilder.__wrap(ret);
-    }
-    /**
-    * Create a TransactionBuilder for a transaction with certificate
     * @param {Certificate} cert
-    * @returns {TransactionBuilder}
+    * @returns {TransactionBuilderSetIOs}
     */
-    static new_payload(cert) {
+    payload(cert) {
+        const ptr = this.ptr;
+        this.ptr = 0;
         _assertClass(cert, Certificate);
-        const ptr0 = cert.ptr;
-        cert.ptr = 0;
-        const ret = wasm.transactionbuilder_new_payload(ptr0);
-        return TransactionBuilder.__wrap(ret);
+        const ret = wasm.transactionbuilder_payload(ptr, cert.ptr);
+        return TransactionBuilderSetIOs.__wrap(ret);
     }
     /**
-    * Add input to the transaction
-    * @param {Input} input
+    * @returns {TransactionBuilderSetIOs}
     */
-    add_input(input) {
-        _assertClass(input, Input);
-        const ptr0 = input.ptr;
-        input.ptr = 0;
-        wasm.transactionbuilder_add_input(this.ptr, ptr0);
-    }
-    /**
-    * Add output to the transaction
-    * @param {Address} address
-    * @param {Value} value
-    */
-    add_output(address, value) {
-        _assertClass(address, Address);
-        const ptr0 = address.ptr;
-        address.ptr = 0;
-        _assertClass(value, Value);
-        const ptr1 = value.ptr;
-        value.ptr = 0;
-        wasm.transactionbuilder_add_output(this.ptr, ptr0, ptr1);
-    }
-    /**
-    * Estimate fee with the currently added inputs, outputs and certificate based on the given algorithm
-    * @param {Fee} fee
-    * @returns {Value}
-    */
-    estimate_fee(fee) {
-        _assertClass(fee, Fee);
-        const ret = wasm.transactionbuilder_estimate_fee(this.ptr, fee.ptr);
-        return Value.__wrap(ret);
-    }
-    /**
-    * @param {Fee} fee
-    * @returns {Balance}
-    */
-    get_balance(fee) {
-        _assertClass(fee, Fee);
-        const ret = wasm.transactionbuilder_get_balance(this.ptr, fee.ptr);
-        return Balance.__wrap(ret);
-    }
-    /**
-    * @returns {Balance}
-    */
-    get_balance_without_fee() {
-        const ret = wasm.transactionbuilder_get_balance_without_fee(this.ptr);
-        return Balance.__wrap(ret);
-    }
-    /**
-    * Get the Transaction with the current inputs and outputs without computing the fees nor adding a change address
-    * @returns {Transaction}
-    */
-    unchecked_finalize() {
+    no_payload() {
         const ptr = this.ptr;
         this.ptr = 0;
-        const ret = wasm.transactionbuilder_unchecked_finalize(ptr);
-        return Transaction.__wrap(ret);
-    }
-    /**
-    * Finalize the transaction by adding the change Address output
-    * leaving enough for paying the minimum fee computed by the given algorithm
-    * see the unchecked_finalize for the non-assisted version
-    *
-    * Example
-    *
-    * ```javascript
-    * const feeAlgorithm = Fee.linear_fee(
-    *     Value.from_str(\'20\'), Value.from_str(\'5\'), Value.from_str(\'10\')
-    * );
-    *
-    * const finalizedTx = txbuilder.finalize(
-    *   feeAlgorithm,
-    *   OutputPolicy.one(changeAddress)
-    * );
-    * ```
-    * @param {Fee} fee
-    * @param {OutputPolicy} output_policy
-    * @returns {Transaction}
-    */
-    seal_with_output_policy(fee, output_policy) {
-        const ptr = this.ptr;
-        this.ptr = 0;
-        _assertClass(fee, Fee);
-        _assertClass(output_policy, OutputPolicy);
-        const ptr0 = output_policy.ptr;
-        output_policy.ptr = 0;
-        const ret = wasm.transactionbuilder_seal_with_output_policy(ptr, fee.ptr, ptr0);
-        return Transaction.__wrap(ret);
-    }
-    /**
-    * Deprecated: use `seal_with_output_policy` instead
-    * @param {Fee} fee
-    * @param {OutputPolicy} output_policy
-    * @returns {Transaction}
-    */
-    finalize(fee, output_policy) {
-        const ptr = this.ptr;
-        this.ptr = 0;
-        _assertClass(fee, Fee);
-        _assertClass(output_policy, OutputPolicy);
-        const ptr0 = output_policy.ptr;
-        output_policy.ptr = 0;
-        const ret = wasm.transactionbuilder_finalize(ptr, fee.ptr, ptr0);
-        return Transaction.__wrap(ret);
+        const ret = wasm.transactionbuilder_no_payload(ptr);
+        return TransactionBuilderSetIOs.__wrap(ret);
     }
 }
 /**
-* Builder pattern implementation for signing a Transaction (adding witnesses)
-* Example (for an account as input)
-*
-* ```javascript
-* //finalizedTx could be the result of the finalize method on a TransactionBuilder object
-* const finalizer = new TransactionFinalizer(finalizedTx);
-*
-* const witness = Witness.for_account(
-*   Hash.from_hex(genesisHashString),
-*   finalizer.get_txid(),
-*   inputAccountPrivateKey,
-*   SpendingCounter.zero()
-* );
-*
-* finalizer.set_witness(0, witness);
-*
-* const signedTx = finalizer.build();
-* ```
 */
-export class TransactionFinalizer {
+export class TransactionBuilderSetAuthData {
 
     static __wrap(ptr) {
-        const obj = Object.create(TransactionFinalizer.prototype);
+        const obj = Object.create(TransactionBuilderSetAuthData.prototype);
         obj.ptr = ptr;
 
         return obj;
@@ -2343,63 +3091,93 @@ export class TransactionFinalizer {
         const ptr = this.ptr;
         this.ptr = 0;
 
-        wasm.__wbg_transactionfinalizer_free(ptr);
+        wasm.__wbg_transactionbuildersetauthdata_free(ptr);
     }
     /**
-    * @param {Transaction} transaction
-    * @returns {TransactionFinalizer}
+    * @returns {TransactionBindingAuthData}
     */
-    constructor(transaction) {
-        _assertClass(transaction, Transaction);
-        const ptr0 = transaction.ptr;
-        transaction.ptr = 0;
-        const ret = wasm.transactionfinalizer_new(ptr0);
-        return TransactionFinalizer.__wrap(ret);
+    get_auth_data() {
+        const ret = wasm.transactionbuildersetauthdata_get_auth_data(this.ptr);
+        return TransactionBindingAuthData.__wrap(ret);
     }
     /**
-    * Set the witness for the corresponding index, the index corresponds to the order in which the inputs were added to the transaction
-    * @param {number} index
-    * @param {Witness} witness
+    * Set the authenticated data
+    * @param {PayloadAuthData} auth
+    * @returns {Transaction}
     */
-    set_witness(index, witness) {
-        _assertClass(witness, Witness);
-        const ptr0 = witness.ptr;
-        witness.ptr = 0;
-        wasm.transactionfinalizer_set_witness(this.ptr, index, ptr0);
+    set_payload_auth(auth) {
+        const ptr = this.ptr;
+        this.ptr = 0;
+        _assertClass(auth, PayloadAuthData);
+        const ret = wasm.transactionbuildersetauthdata_set_payload_auth(ptr, auth.ptr);
+        return Transaction.__wrap(ret);
+    }
+}
+/**
+*/
+export class TransactionBuilderSetIOs {
+
+    static __wrap(ptr) {
+        const obj = Object.create(TransactionBuilderSetIOs.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_transactionbuildersetios_free(ptr);
     }
     /**
-    * Deprecated: Use `get_tx_sign_data_hash` instead\
+    * @param {Inputs} inputs
+    * @param {Outputs} outputs
+    * @returns {TransactionBuilderSetWitness}
+    */
+    set_ios(inputs, outputs) {
+        const ptr = this.ptr;
+        this.ptr = 0;
+        _assertClass(inputs, Inputs);
+        _assertClass(outputs, Outputs);
+        const ret = wasm.transactionbuildersetios_set_ios(ptr, inputs.ptr, outputs.ptr);
+        return TransactionBuilderSetWitness.__wrap(ret);
+    }
+}
+/**
+*/
+export class TransactionBuilderSetWitness {
+
+    static __wrap(ptr) {
+        const obj = Object.create(TransactionBuilderSetWitness.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_transactionbuildersetwitness_free(ptr);
+    }
+    /**
     * @returns {TransactionSignDataHash}
     */
-    get_txid() {
-        const ret = wasm.transactionfinalizer_get_txid(this.ptr);
+    get_auth_data_for_witness() {
+        const ret = wasm.transactionbuildersetwitness_get_auth_data_for_witness(this.ptr);
         return TransactionSignDataHash.__wrap(ret);
     }
     /**
-    * @returns {TransactionSignDataHash}
+    * @param {Witnesses} witnesses
+    * @returns {TransactionBuilderSetAuthData}
     */
-    get_tx_sign_data_hash() {
-        const ret = wasm.transactionfinalizer_get_tx_sign_data_hash(this.ptr);
-        return TransactionSignDataHash.__wrap(ret);
-    }
-    /**
-    * Deprecated: Use `get_tx_sign_data_hash` instead\
-    * @returns {AuthenticatedTransaction}
-    */
-    build() {
+    set_witnesses(witnesses) {
         const ptr = this.ptr;
         this.ptr = 0;
-        const ret = wasm.transactionfinalizer_build(ptr);
-        return AuthenticatedTransaction.__wrap(ret);
-    }
-    /**
-    * @returns {AuthenticatedTransaction}
-    */
-    finalize() {
-        const ptr = this.ptr;
-        this.ptr = 0;
-        const ret = wasm.transactionfinalizer_finalize(ptr);
-        return AuthenticatedTransaction.__wrap(ret);
+        _assertClass(witnesses, Witnesses);
+        const ret = wasm.transactionbuildersetwitness_set_witnesses(ptr, witnesses.ptr);
+        return TransactionBuilderSetAuthData.__wrap(ret);
     }
 }
 /**
@@ -2531,13 +3309,23 @@ export class UtxoPointer {
     */
     static new(fragment_id, output_index, value) {
         _assertClass(fragment_id, FragmentId);
-        const ptr0 = fragment_id.ptr;
-        fragment_id.ptr = 0;
         _assertClass(value, Value);
-        const ptr1 = value.ptr;
-        value.ptr = 0;
-        const ret = wasm.utxopointer_new(ptr0, output_index, ptr1);
+        const ret = wasm.utxopointer_new(fragment_id.ptr, output_index, value.ptr);
         return UtxoPointer.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    output_index() {
+        const ret = wasm.utxopointer_output_index(this.ptr);
+        return ret;
+    }
+    /**
+    * @returns {FragmentId}
+    */
+    fragment_id() {
+        const ret = wasm.utxopointer_fragment_id(this.ptr);
+        return FragmentId.__wrap(ret);
     }
 }
 /**
@@ -2735,15 +3523,9 @@ export class Witness {
     */
     static for_utxo(genesis_hash, transaction_id, secret_key) {
         _assertClass(genesis_hash, Hash);
-        const ptr0 = genesis_hash.ptr;
-        genesis_hash.ptr = 0;
         _assertClass(transaction_id, TransactionSignDataHash);
-        const ptr1 = transaction_id.ptr;
-        transaction_id.ptr = 0;
         _assertClass(secret_key, PrivateKey);
-        const ptr2 = secret_key.ptr;
-        secret_key.ptr = 0;
-        const ret = wasm.witness_for_utxo(ptr0, ptr1, ptr2);
+        const ret = wasm.witness_for_utxo(genesis_hash.ptr, transaction_id.ptr, secret_key.ptr);
         return Witness.__wrap(ret);
     }
     /**
@@ -2766,18 +3548,10 @@ export class Witness {
     */
     static for_account(genesis_hash, transaction_id, secret_key, account_spending_counter) {
         _assertClass(genesis_hash, Hash);
-        const ptr0 = genesis_hash.ptr;
-        genesis_hash.ptr = 0;
         _assertClass(transaction_id, TransactionSignDataHash);
-        const ptr1 = transaction_id.ptr;
-        transaction_id.ptr = 0;
         _assertClass(secret_key, PrivateKey);
-        const ptr2 = secret_key.ptr;
-        secret_key.ptr = 0;
         _assertClass(account_spending_counter, SpendingCounter);
-        const ptr3 = account_spending_counter.ptr;
-        account_spending_counter.ptr = 0;
-        const ret = wasm.witness_for_account(ptr0, ptr1, ptr2, ptr3);
+        const ret = wasm.witness_for_account(genesis_hash.ptr, transaction_id.ptr, secret_key.ptr, account_spending_counter.ptr);
         return Witness.__wrap(ret);
     }
     /**
@@ -2787,6 +3561,31 @@ export class Witness {
     static from_external_account(witness) {
         _assertClass(witness, AccountWitness);
         const ret = wasm.witness_from_external_account(witness.ptr);
+        return Witness.__wrap(ret);
+    }
+    /**
+    * Generate Witness for an legacy utxo-based transaction Input
+    * @param {Hash} genesis_hash
+    * @param {TransactionSignDataHash} transaction_id
+    * @param {Bip32PrivateKey} secret_key
+    * @returns {Witness}
+    */
+    static for_legacy_utxo(genesis_hash, transaction_id, secret_key) {
+        _assertClass(genesis_hash, Hash);
+        _assertClass(transaction_id, TransactionSignDataHash);
+        _assertClass(secret_key, Bip32PrivateKey);
+        const ret = wasm.witness_for_legacy_utxo(genesis_hash.ptr, transaction_id.ptr, secret_key.ptr);
+        return Witness.__wrap(ret);
+    }
+    /**
+    * @param {Bip32PublicKey} key
+    * @param {LegacyUtxoWitness} witness
+    * @returns {Witness}
+    */
+    static from_external_legacy_utxo(key, witness) {
+        _assertClass(key, Bip32PublicKey);
+        _assertClass(witness, LegacyUtxoWitness);
+        const ret = wasm.witness_from_external_legacy_utxo(key.ptr, witness.ptr);
         return Witness.__wrap(ret);
     }
     /**
@@ -2820,6 +3619,13 @@ export class Witnesses {
         wasm.__wbg_witnesses_free(ptr);
     }
     /**
+    * @returns {Witnesses}
+    */
+    static new() {
+        const ret = wasm.witnesses_new();
+        return Witnesses.__wrap(ret);
+    }
+    /**
     * @returns {number}
     */
     size() {
@@ -2833,6 +3639,15 @@ export class Witnesses {
     get(index) {
         const ret = wasm.witnesses_get(this.ptr, index);
         return Witness.__wrap(ret);
+    }
+    /**
+    * @param {Witness} item
+    */
+    add(item) {
+        _assertClass(item, Witness);
+        const ptr0 = item.ptr;
+        item.ptr = 0;
+        wasm.witnesses_add(this.ptr, ptr0);
     }
 }
 

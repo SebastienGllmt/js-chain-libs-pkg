@@ -26,6 +26,15 @@ export enum AddressKind {
 }
 /**
 */
+export enum CertificateType {
+  StakeDelegation,
+  OwnerStakeDelegation,
+  PoolRegistration,
+  PoolRetirement,
+  PoolUpdate,
+}
+/**
+*/
 /**
 * This is either an single account or a multisig account depending on the witness type
 */
@@ -45,7 +54,7 @@ export class Account {
 * @param {PublicKey} key 
 * @returns {Account} 
 */
-  static from_public_key(key: PublicKey): Account;
+  static single_from_public_key(key: PublicKey): Account;
 /**
 * @returns {AccountIdentifier} 
 */
@@ -66,12 +75,31 @@ export class AccountAddress {
 }
 /**
 */
+export class AccountBindingSignature {
+  free(): void;
+/**
+* @param {PrivateKey} private_key 
+* @param {TransactionBindingAuthData} auth_data 
+* @returns {AccountBindingSignature} 
+*/
+  static new_single(private_key: PrivateKey, auth_data: TransactionBindingAuthData): AccountBindingSignature;
+}
+/**
+*/
 export class AccountIdentifier {
   free(): void;
 /**
 * @returns {string} 
 */
   to_hex(): string;
+/**
+* @returns {Account} 
+*/
+  to_account_single(): Account;
+/**
+* @returns {Account} 
+*/
+  to_account_multi(): Account;
 }
 /**
 */
@@ -205,21 +233,6 @@ export class Address {
 * @returns {MultisigAddress} 
 */
   to_multisig_address(): MultisigAddress | undefined;
-}
-/**
-* Type for representing a Transaction with Witnesses (signatures)
-*/
-export class AuthenticatedTransaction {
-  free(): void;
-/**
-* Get a copy of the inner Transaction, discarding the signatures
-* @returns {Transaction} 
-*/
-  transaction(): Transaction;
-/**
-* @returns {Witnesses} 
-*/
-  witnesses(): Witnesses;
 }
 /**
 * Amount of the balance in the transaction.
@@ -393,6 +406,26 @@ export class Block {
 * @returns {Fragments} 
 */
   fragments(): Fragments;
+/**
+* @returns {number} 
+*/
+  epoch(): number;
+/**
+* @returns {number} 
+*/
+  slot(): number;
+/**
+* @returns {number} 
+*/
+  chain_length(): number;
+/**
+* @returns {PoolId} 
+*/
+  leader_id(): PoolId | undefined;
+/**
+* @returns {number} 
+*/
+  content_size(): number;
 }
 /**
 */
@@ -420,9 +453,76 @@ export class Certificate {
 */
   static stake_pool_registration(pool_registration: PoolRegistration): Certificate;
 /**
-* @param {PrivateKey} private_key 
+* Create a Certificate for PoolRetirement
+* @param {PoolRetirement} pool_retirement 
+* @returns {Certificate} 
 */
-  sign(private_key: PrivateKey): void;
+  static stake_pool_retirement(pool_retirement: PoolRetirement): Certificate;
+/**
+* @returns {number} 
+*/
+  get_type(): number;
+/**
+* @returns {StakeDelegation} 
+*/
+  get_stake_delegation(): StakeDelegation;
+/**
+* @returns {OwnerStakeDelegation} 
+*/
+  get_owner_stake_delegation(): OwnerStakeDelegation;
+/**
+* @returns {PoolRegistration} 
+*/
+  get_pool_registration(): PoolRegistration;
+/**
+* @returns {PoolRetirement} 
+*/
+  get_pool_retirement(): PoolRetirement;
+}
+/**
+* Delegation Ratio type express a number of parts
+* and a list of pools and their individual parts
+*
+* E.g. parts: 7, pools: [(A,2), (B,1), (C,4)] means that
+* A is associated with 2/7 of the stake, B has 1/7 of stake and C
+* has 4/7 of the stake.
+*
+* It\'s invalid to have less than 2 elements in the array,
+* and by extension parts need to be equal to the sum of individual
+* pools parts.
+*/
+export class DelegationRatio {
+  free(): void;
+/**
+* @param {number} parts 
+* @param {PoolDelegationRatios} pools 
+* @returns {DelegationRatio} 
+*/
+  static new(parts: number, pools: PoolDelegationRatios): DelegationRatio | undefined;
+}
+/**
+* Set the choice of delegation:
+*
+* * No delegation
+* * Full delegation of this account to a specific pool
+* * Ratio of stake to multiple pools
+*/
+export class DelegationType {
+  free(): void;
+/**
+* @returns {DelegationType} 
+*/
+  static non_delegated(): DelegationType;
+/**
+* @param {PoolId} pool_id 
+* @returns {DelegationType} 
+*/
+  static full(pool_id: PoolId): DelegationType;
+/**
+* @param {DelegationRatio} r 
+* @returns {DelegationType} 
+*/
+  static ratio(r: DelegationRatio): DelegationType;
 }
 /**
 */
@@ -458,7 +558,7 @@ export class Ed25519Signature {
 }
 /**
 * Algorithm used to compute transaction fees
-* Currently the only implementation if the Linear one
+* Currently the only implementation is the Linear one
 */
 export class Fee {
   free(): void;
@@ -471,11 +571,10 @@ export class Fee {
 */
   static linear_fee(constant: Value, coefficient: Value, certificate: Value): Fee;
 /**
-* Compute the fee if possible (it can fail in case the values are out of range)
 * @param {Transaction} tx 
 * @returns {Value} 
 */
-  calculate(tx: Transaction): Value | undefined;
+  calculate(tx: Transaction): Value;
 }
 /**
 * All possible messages recordable in the Block content
@@ -483,21 +582,15 @@ export class Fee {
 export class Fragment {
   free(): void;
 /**
-* @param {AuthenticatedTransaction} tx 
+* @param {Transaction} tx 
 * @returns {Fragment} 
 */
-  static from_authenticated_transaction(tx: AuthenticatedTransaction): Fragment;
-/**
-* Deprecated: Use `from_authenticated_transaction` instead
-* @param {AuthenticatedTransaction} tx 
-* @returns {Fragment} 
-*/
-  static from_generated_transaction(tx: AuthenticatedTransaction): Fragment;
+  static from_transaction(tx: Transaction): Fragment;
 /**
 * Get a Transaction if the Fragment represents one
-* @returns {AuthenticatedTransaction} 
+* @returns {Transaction} 
 */
-  get_transaction(): AuthenticatedTransaction;
+  get_transaction(): Transaction;
 /**
 * @returns {Uint8Array} 
 */
@@ -525,7 +618,11 @@ export class Fragment {
 /**
 * @returns {boolean} 
 */
-  is_pool_management(): boolean;
+  is_pool_retirement(): boolean;
+/**
+* @returns {boolean} 
+*/
+  is_pool_update(): boolean;
 /**
 * @returns {boolean} 
 */
@@ -562,6 +659,10 @@ export class FragmentId {
 export class Fragments {
   free(): void;
 /**
+* @returns {Fragments} 
+*/
+  static new(): Fragments;
+/**
 * @returns {number} 
 */
   size(): number;
@@ -570,6 +671,10 @@ export class Fragments {
 * @returns {Fragment} 
 */
   get(index: number): Fragment;
+/**
+* @param {Fragment} item 
+*/
+  add(item: Fragment): void;
 }
 /**
 */
@@ -610,6 +715,39 @@ export class Hash {
 }
 /**
 */
+export class IndexSignatures {
+  free(): void;
+/**
+* @returns {IndexSignatures} 
+*/
+  static new(): IndexSignatures;
+/**
+* @returns {number} 
+*/
+  size(): number;
+/**
+* @param {number} index 
+* @returns {IndexedSignature} 
+*/
+  get(index: number): IndexedSignature;
+/**
+* @param {IndexedSignature} item 
+*/
+  add(item: IndexedSignature): void;
+}
+/**
+*/
+export class IndexedSignature {
+  free(): void;
+/**
+* @param {number} index 
+* @param {AccountBindingSignature} signature 
+* @returns {IndexedSignature} 
+*/
+  static new(index: number, signature: AccountBindingSignature): IndexedSignature;
+}
+/**
+*/
 export class Input {
   free(): void;
 /**
@@ -647,14 +785,87 @@ export class Input {
   get_utxo_pointer(): UtxoPointer;
 /**
 * Get the source Account if the Input type is Account
-* @returns {Account} 
+* @returns {AccountIdentifier} 
 */
-  get_account(): Account;
+  get_account_identifier(): AccountIdentifier;
+}
+/**
+*/
+export class InputOutput {
+  free(): void;
+/**
+* @returns {Inputs} 
+*/
+  inputs(): Inputs;
+/**
+* @returns {Outputs} 
+*/
+  outputs(): Outputs;
+}
+/**
+*/
+export class InputOutputBuilder {
+  free(): void;
+/**
+* @returns {InputOutputBuilder} 
+*/
+  static empty(): InputOutputBuilder;
+/**
+* Add input to the IO Builder
+* @param {Input} input 
+*/
+  add_input(input: Input): void;
+/**
+* Add output to the IO Builder
+* @param {Address} address 
+* @param {Value} value 
+*/
+  add_output(address: Address, value: Value): void;
+/**
+* Estimate fee with the currently added inputs, outputs and certificate based on the given algorithm
+* @param {Fee} fee 
+* @param {Payload} payload 
+* @returns {Value} 
+*/
+  estimate_fee(fee: Fee, payload: Payload): Value;
+/**
+* @param {Payload} payload 
+* @param {Fee} fee 
+* @returns {Balance} 
+*/
+  get_balance(payload: Payload, fee: Fee): Balance;
+/**
+* @returns {Balance} 
+*/
+  get_balance_without_fee(): Balance;
+/**
+* @returns {InputOutput} 
+*/
+  build(): InputOutput;
+/**
+* Seal the transaction by passing fee rule
+* @param {Payload} payload 
+* @param {Fee} fee_algorithm 
+* @returns {InputOutput} 
+*/
+  seal(payload: Payload, fee_algorithm: Fee): InputOutput;
+/**
+* Seal the transaction by passing fee rule and the output policy
+* @param {Payload} payload 
+* @param {Fee} fee_algorithm 
+* @param {OutputPolicy} policy 
+* @returns {InputOutput} 
+*/
+  seal_with_output_policy(payload: Payload, fee_algorithm: Fee, policy: OutputPolicy): InputOutput;
 }
 /**
 */
 export class Inputs {
   free(): void;
+/**
+* @returns {Inputs} 
+*/
+  static new(): Inputs;
 /**
 * @returns {number} 
 */
@@ -664,6 +875,10 @@ export class Inputs {
 * @returns {Input} 
 */
   get(index: number): Input;
+/**
+* @param {Input} item 
+*/
+  add(item: Input): void;
 }
 /**
 */
@@ -674,6 +889,38 @@ export class KesPublicKey {
 * @returns {KesPublicKey} 
 */
   static from_bech32(bech32_str: string): KesPublicKey;
+}
+/**
+*/
+export class LegacyUtxoWitness {
+  free(): void;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
+* @returns {string} 
+*/
+  to_bech32(): string;
+/**
+* @returns {string} 
+*/
+  to_hex(): string;
+/**
+* @param {Uint8Array} bytes 
+* @returns {LegacyUtxoWitness} 
+*/
+  static from_bytes(bytes: Uint8Array): LegacyUtxoWitness;
+/**
+* @param {string} bech32_str 
+* @returns {LegacyUtxoWitness} 
+*/
+  static from_bech32(bech32_str: string): LegacyUtxoWitness;
+/**
+* @param {string} input 
+* @returns {LegacyUtxoWitness} 
+*/
+  static from_hex(input: string): LegacyUtxoWitness;
 }
 /**
 */
@@ -726,6 +973,10 @@ export class OutputPolicy {
 export class Outputs {
   free(): void;
 /**
+* @returns {Outputs} 
+*/
+  static new(): Outputs;
+/**
 * @returns {number} 
 */
   size(): number;
@@ -734,6 +985,104 @@ export class Outputs {
 * @returns {Output} 
 */
   get(index: number): Output;
+/**
+* @param {Output} item 
+*/
+  add(item: Output): void;
+}
+/**
+*/
+export class OwnerStakeDelegation {
+  free(): void;
+/**
+* @param {DelegationType} delegation_type 
+* @returns {OwnerStakeDelegation} 
+*/
+  static new(delegation_type: DelegationType): OwnerStakeDelegation;
+/**
+* @returns {DelegationType} 
+*/
+  delegation_type(): DelegationType;
+}
+/**
+*/
+export class Payload {
+  free(): void;
+/**
+* @returns {Payload} 
+*/
+  static no_payload(): Payload;
+/**
+* @param {Certificate} certificate 
+* @returns {Payload} 
+*/
+  static certificate(certificate: Certificate): Payload;
+}
+/**
+*/
+export class PayloadAuthData {
+  free(): void;
+/**
+* @returns {PayloadAuthData} 
+*/
+  static for_no_payload(): PayloadAuthData;
+/**
+* @returns {PayloadAuthData} 
+*/
+  static for_owner_stake_delegation(): PayloadAuthData;
+/**
+* @param {StakeDelegationAuthData} auth_data 
+* @returns {PayloadAuthData} 
+*/
+  static for_stake_delegation(auth_data: StakeDelegationAuthData): PayloadAuthData;
+/**
+* @param {PoolRegistrationAuthData} auth_data 
+* @returns {PayloadAuthData} 
+*/
+  static for_pool_registration(auth_data: PoolRegistrationAuthData): PayloadAuthData;
+/**
+* @param {PoolRetirementAuthData} auth_data 
+* @returns {PayloadAuthData} 
+*/
+  static for_pool_retirement(auth_data: PoolRetirementAuthData): PayloadAuthData;
+/**
+* @param {PoolUpdateAuthData} auth_data 
+* @returns {PayloadAuthData} 
+*/
+  static for_pool_update(auth_data: PoolUpdateAuthData): PayloadAuthData;
+}
+/**
+*/
+export class PoolDelegationRatio {
+  free(): void;
+/**
+* @param {PoolId} pool 
+* @param {number} part 
+* @returns {PoolDelegationRatio} 
+*/
+  static new(pool: PoolId, part: number): PoolDelegationRatio;
+}
+/**
+*/
+export class PoolDelegationRatios {
+  free(): void;
+/**
+* @returns {PoolDelegationRatios} 
+*/
+  static new(): PoolDelegationRatios;
+/**
+* @returns {number} 
+*/
+  size(): number;
+/**
+* @param {number} index 
+* @returns {PoolDelegationRatio} 
+*/
+  get(index: number): PoolDelegationRatio;
+/**
+* @param {PoolDelegationRatio} item 
+*/
+  add(item: PoolDelegationRatio): void;
 }
 /**
 */
@@ -756,17 +1105,65 @@ export class PoolRegistration {
 /**
 * @param {U128} serial 
 * @param {PublicKeys} owners 
+* @param {PublicKeys} operators 
 * @param {number} management_threshold 
 * @param {TimeOffsetSeconds} start_validity 
 * @param {KesPublicKey} kes_public_key 
 * @param {VrfPublicKey} vrf_public_key 
 * @returns {PoolRegistration} 
 */
-  constructor(serial: U128, owners: PublicKeys, management_threshold: number, start_validity: TimeOffsetSeconds, kes_public_key: KesPublicKey, vrf_public_key: VrfPublicKey);
+  constructor(serial: U128, owners: PublicKeys, operators: PublicKeys, management_threshold: number, start_validity: TimeOffsetSeconds, kes_public_key: KesPublicKey, vrf_public_key: VrfPublicKey);
 /**
 * @returns {PoolId} 
 */
   id(): PoolId;
+/**
+* @returns {TimeOffsetSeconds} 
+*/
+  start_validity(): TimeOffsetSeconds;
+/**
+* @returns {PublicKeys} 
+*/
+  owners(): PublicKeys;
+/**
+* @returns {TaxType} 
+*/
+  rewards(): TaxType;
+}
+/**
+*/
+export class PoolRegistrationAuthData {
+  free(): void;
+/**
+* @param {IndexSignatures} signatures 
+* @returns {PoolRegistrationAuthData} 
+*/
+  static new(signatures: IndexSignatures): PoolRegistrationAuthData;
+}
+/**
+*/
+export class PoolRetirement {
+  free(): void;
+}
+/**
+*/
+export class PoolRetirementAuthData {
+  free(): void;
+/**
+* @param {IndexSignatures} signatures 
+* @returns {PoolRetirementAuthData} 
+*/
+  static new(signatures: IndexSignatures): PoolRetirementAuthData;
+}
+/**
+*/
+export class PoolUpdateAuthData {
+  free(): void;
+/**
+* @param {IndexSignatures} signatures 
+* @returns {PoolUpdateAuthData} 
+*/
+  static new(signatures: IndexSignatures): PoolUpdateAuthData;
 }
 /**
 * ED25519 signing key, either normal or extended
@@ -912,11 +1309,34 @@ export class StakeDelegation {
   free(): void;
 /**
 * Create a stake delegation object from account (stake key) to pool_id
-* @param {PoolId} pool_id 
+* @param {DelegationType} delegation_type 
 * @param {PublicKey} account 
 * @returns {StakeDelegation} 
 */
-  static new(pool_id: PoolId, account: PublicKey): StakeDelegation;
+  static new(delegation_type: DelegationType, account: PublicKey): StakeDelegation;
+/**
+* @returns {DelegationType} 
+*/
+  delegation_type(): DelegationType;
+/**
+* @returns {AccountIdentifier} 
+*/
+  account(): AccountIdentifier;
+}
+/**
+*/
+export class StakeDelegationAuthData {
+  free(): void;
+/**
+* @param {AccountBindingSignature} signature 
+* @returns {StakeDelegationAuthData} 
+*/
+  static new(signature: AccountBindingSignature): StakeDelegationAuthData;
+}
+/**
+*/
+export class TaxType {
+  free(): void;
 }
 /**
 */
@@ -928,6 +1348,10 @@ export class TimeOffsetSeconds {
 * @returns {TimeOffsetSeconds} 
 */
   static from_string(number: string): TimeOffsetSeconds;
+/**
+* @returns {string} 
+*/
+  to_string(): string;
 }
 /**
 * Type representing a unsigned transaction
@@ -940,6 +1364,10 @@ export class Transaction {
 */
   id(): TransactionSignDataHash;
 /**
+* @returns {Witnesses} 
+*/
+  witnesses(): Witnesses;
+/**
 * Get collection of the inputs in the transaction (this allocates new copies of all the values)
 * @returns {Inputs} 
 */
@@ -950,9 +1378,14 @@ export class Transaction {
 */
   outputs(): Outputs;
 /**
-* @returns {Transaction} 
+* @returns {Certificate} 
 */
-  clone(): Transaction;
+  certificate(): Certificate | undefined;
+}
+/**
+*/
+export class TransactionBindingAuthData {
+  free(): void;
 }
 /**
 * Builder pattern implementation for making a Transaction
@@ -960,165 +1393,63 @@ export class Transaction {
 * Example
 *
 * ```javascript
-* const txbuilder = new TransactionBuilder();
-*
-* const account = Account.from_address(Address.from_string(
-*   &#39;ca1qh9u0nxmnfg7af8ycuygx57p5xgzmnmgtaeer9xun7hly6mlgt3pj2xk344&#39;
-* ));
-*
-* const input = Input.from_account(account, Value.from_str(\'1000\'));
-*
-* txbuilder.add_input(input);
-*
-* txbuilder.add_output(
-*   Address.from_string(
-*     &#39;ca1q5nr5pvt9e5p009strshxndrsx5etcentslp2rwj6csm8sfk24a2w3swacn&#39;
-*   ),
-*   Value.from_str(\'500\')
-* );
-*
-* const feeAlgorithm = Fee.linear_fee(
-*   Value.from_str(\'20\'),
-*   Value.from_str(\'5\'),
-*   Value.from_str(\'0\')
-* );
-*
-* const finalizedTx = txbuilder.finalize(
-*   feeAlgorithm,
-*   OutputPolicy.one(accountInputAddress)
-* );
 * ```
 */
 export class TransactionBuilder {
   free(): void;
 /**
-* Deprecated. Use `new_no_payload()` instead
 * @returns {TransactionBuilder} 
 */
   constructor();
 /**
-* Create a TransactionBuilder for a transaction without certificate
-* @returns {TransactionBuilder} 
-*/
-  static new_no_payload(): TransactionBuilder;
-/**
-* Create a TransactionBuilder for a transaction with certificate
 * @param {Certificate} cert 
-* @returns {TransactionBuilder} 
+* @returns {TransactionBuilderSetIOs} 
 */
-  static new_payload(cert: Certificate): TransactionBuilder;
+  payload(cert: Certificate): TransactionBuilderSetIOs;
 /**
-* Add input to the transaction
-* @param {Input} input 
+* @returns {TransactionBuilderSetIOs} 
 */
-  add_input(input: Input): void;
-/**
-* Add output to the transaction
-* @param {Address} address 
-* @param {Value} value 
-*/
-  add_output(address: Address, value: Value): void;
-/**
-* Estimate fee with the currently added inputs, outputs and certificate based on the given algorithm
-* @param {Fee} fee 
-* @returns {Value} 
-*/
-  estimate_fee(fee: Fee): Value;
-/**
-* @param {Fee} fee 
-* @returns {Balance} 
-*/
-  get_balance(fee: Fee): Balance;
-/**
-* @returns {Balance} 
-*/
-  get_balance_without_fee(): Balance;
-/**
-* Get the Transaction with the current inputs and outputs without computing the fees nor adding a change address
-* @returns {Transaction} 
-*/
-  unchecked_finalize(): Transaction;
-/**
-* Finalize the transaction by adding the change Address output
-* leaving enough for paying the minimum fee computed by the given algorithm
-* see the unchecked_finalize for the non-assisted version
-*
-* Example
-*
-* ```javascript
-* const feeAlgorithm = Fee.linear_fee(
-*     Value.from_str(\'20\'), Value.from_str(\'5\'), Value.from_str(\'10\')
-* );
-*
-* const finalizedTx = txbuilder.finalize(
-*   feeAlgorithm,
-*   OutputPolicy.one(changeAddress)
-* );
-* ```
-* @param {Fee} fee 
-* @param {OutputPolicy} output_policy 
-* @returns {Transaction} 
-*/
-  seal_with_output_policy(fee: Fee, output_policy: OutputPolicy): Transaction;
-/**
-* Deprecated: use `seal_with_output_policy` instead
-* @param {Fee} fee 
-* @param {OutputPolicy} output_policy 
-* @returns {Transaction} 
-*/
-  finalize(fee: Fee, output_policy: OutputPolicy): Transaction;
+  no_payload(): TransactionBuilderSetIOs;
 }
 /**
-* Builder pattern implementation for signing a Transaction (adding witnesses)
-* Example (for an account as input)
-*
-* ```javascript
-* //finalizedTx could be the result of the finalize method on a TransactionBuilder object
-* const finalizer = new TransactionFinalizer(finalizedTx);
-*
-* const witness = Witness.for_account(
-*   Hash.from_hex(genesisHashString),
-*   finalizer.get_txid(),
-*   inputAccountPrivateKey,
-*   SpendingCounter.zero()
-* );
-*
-* finalizer.set_witness(0, witness);
-*
-* const signedTx = finalizer.build();
-* ```
 */
-export class TransactionFinalizer {
+export class TransactionBuilderSetAuthData {
   free(): void;
 /**
-* @param {Transaction} transaction 
-* @returns {TransactionFinalizer} 
+* @returns {TransactionBindingAuthData} 
 */
-  constructor(transaction: Transaction);
+  get_auth_data(): TransactionBindingAuthData;
 /**
-* Set the witness for the corresponding index, the index corresponds to the order in which the inputs were added to the transaction
-* @param {number} index 
-* @param {Witness} witness 
+* Set the authenticated data
+* @param {PayloadAuthData} auth 
+* @returns {Transaction} 
 */
-  set_witness(index: number, witness: Witness): void;
+  set_payload_auth(auth: PayloadAuthData): Transaction;
+}
 /**
-* Deprecated: Use `get_tx_sign_data_hash` instead\
+*/
+export class TransactionBuilderSetIOs {
+  free(): void;
+/**
+* @param {Inputs} inputs 
+* @param {Outputs} outputs 
+* @returns {TransactionBuilderSetWitness} 
+*/
+  set_ios(inputs: Inputs, outputs: Outputs): TransactionBuilderSetWitness;
+}
+/**
+*/
+export class TransactionBuilderSetWitness {
+  free(): void;
+/**
 * @returns {TransactionSignDataHash} 
 */
-  get_txid(): TransactionSignDataHash;
+  get_auth_data_for_witness(): TransactionSignDataHash;
 /**
-* @returns {TransactionSignDataHash} 
+* @param {Witnesses} witnesses 
+* @returns {TransactionBuilderSetAuthData} 
 */
-  get_tx_sign_data_hash(): TransactionSignDataHash;
-/**
-* Deprecated: Use `get_tx_sign_data_hash` instead\
-* @returns {AuthenticatedTransaction} 
-*/
-  build(): AuthenticatedTransaction;
-/**
-* @returns {AuthenticatedTransaction} 
-*/
-  finalize(): AuthenticatedTransaction;
+  set_witnesses(witnesses: Witnesses): TransactionBuilderSetAuthData;
 }
 /**
 * Type for representing the hash of a Transaction, necessary for signing it
@@ -1180,6 +1511,14 @@ export class UtxoPointer {
 * @returns {UtxoPointer} 
 */
   static new(fragment_id: FragmentId, output_index: number, value: Value): UtxoPointer;
+/**
+* @returns {number} 
+*/
+  output_index(): number;
+/**
+* @returns {FragmentId} 
+*/
+  fragment_id(): FragmentId;
 }
 /**
 */
@@ -1293,6 +1632,20 @@ export class Witness {
 */
   static from_external_account(witness: AccountWitness): Witness;
 /**
+* Generate Witness for an legacy utxo-based transaction Input
+* @param {Hash} genesis_hash 
+* @param {TransactionSignDataHash} transaction_id 
+* @param {Bip32PrivateKey} secret_key 
+* @returns {Witness} 
+*/
+  static for_legacy_utxo(genesis_hash: Hash, transaction_id: TransactionSignDataHash, secret_key: Bip32PrivateKey): Witness;
+/**
+* @param {Bip32PublicKey} key 
+* @param {LegacyUtxoWitness} witness 
+* @returns {Witness} 
+*/
+  static from_external_legacy_utxo(key: Bip32PublicKey, witness: LegacyUtxoWitness): Witness;
+/**
 * Get string representation
 * @returns {string} 
 */
@@ -1303,6 +1656,10 @@ export class Witness {
 export class Witnesses {
   free(): void;
 /**
+* @returns {Witnesses} 
+*/
+  static new(): Witnesses;
+/**
 * @returns {number} 
 */
   size(): number;
@@ -1311,4 +1668,8 @@ export class Witnesses {
 * @returns {Witness} 
 */
   get(index: number): Witness;
+/**
+* @param {Witness} item 
+*/
+  add(item: Witness): void;
 }
