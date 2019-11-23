@@ -26,6 +26,13 @@ export enum AddressKind {
 }
 /**
 */
+export enum DelegationKind {
+  NonDelegated,
+  Full,
+  Ratio,
+}
+/**
+*/
 export enum CertificateType {
   StakeDelegation,
   OwnerStakeDelegation,
@@ -523,6 +530,14 @@ export class DelegationType {
 * @returns {DelegationType} 
 */
   static ratio(r: DelegationRatio): DelegationType;
+/**
+* @returns {number} 
+*/
+  get_kind(): number;
+/**
+* @returns {PoolId} 
+*/
+  get_full(): PoolId | undefined;
 }
 /**
 */
@@ -592,9 +607,18 @@ export class Fragment {
 */
   get_transaction(): Transaction;
 /**
+* @returns {OldUtxoDeclaration} 
+*/
+  get_old_utxo_declaration(): OldUtxoDeclaration;
+/**
 * @returns {Uint8Array} 
 */
   as_bytes(): Uint8Array;
+/**
+* @param {any} bytes 
+* @returns {Fragment} 
+*/
+  static from_bytes(bytes: any): Fragment;
 /**
 * @returns {boolean} 
 */
@@ -892,6 +916,20 @@ export class KesPublicKey {
 }
 /**
 */
+export class LegacyDaedalusPrivateKey {
+  free(): void;
+/**
+* @param {Uint8Array} bytes 
+* @returns {LegacyDaedalusPrivateKey} 
+*/
+  static from_bytes(bytes: Uint8Array): LegacyDaedalusPrivateKey;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+}
+/**
+*/
 export class LegacyUtxoWitness {
   free(): void;
 /**
@@ -934,6 +972,25 @@ export class MultisigAddress {
 * @returns {Address} 
 */
   to_base_address(): Address;
+}
+/**
+*/
+export class OldUtxoDeclaration {
+  free(): void;
+/**
+* @returns {number} 
+*/
+  size(): number;
+/**
+* @param {number} index 
+* @returns {string} 
+*/
+  get_address(index: number): string;
+/**
+* @param {number} index 
+* @returns {Value} 
+*/
+  get_value(index: number): Value;
 }
 /**
 * Type for representing a Transaction Output, composed of an Address and a Value
@@ -1354,7 +1411,6 @@ export class TimeOffsetSeconds {
   to_string(): string;
 }
 /**
-* Type representing a unsigned transaction
 */
 export class Transaction {
   free(): void;
@@ -1632,19 +1688,27 @@ export class Witness {
 */
   static from_external_account(witness: AccountWitness): Witness;
 /**
-* Generate Witness for an legacy utxo-based transaction Input
+* Generate Witness for a legacy icarus utxo-based transaction Input
 * @param {Hash} genesis_hash 
 * @param {TransactionSignDataHash} transaction_id 
 * @param {Bip32PrivateKey} secret_key 
 * @returns {Witness} 
 */
-  static for_legacy_utxo(genesis_hash: Hash, transaction_id: TransactionSignDataHash, secret_key: Bip32PrivateKey): Witness;
+  static for_legacy_icarus_utxo(genesis_hash: Hash, transaction_id: TransactionSignDataHash, secret_key: Bip32PrivateKey): Witness;
 /**
 * @param {Bip32PublicKey} key 
 * @param {LegacyUtxoWitness} witness 
 * @returns {Witness} 
 */
-  static from_external_legacy_utxo(key: Bip32PublicKey, witness: LegacyUtxoWitness): Witness;
+  static from_external_legacy_icarus_utxo(key: Bip32PublicKey, witness: LegacyUtxoWitness): Witness;
+/**
+* Generate Witness for a legacy daedalus utxo-based transaction Input
+* @param {Hash} genesis_hash 
+* @param {TransactionSignDataHash} transaction_id 
+* @param {LegacyDaedalusPrivateKey} secret_key 
+* @returns {Witness} 
+*/
+  static for_legacy_daedalus_utxo(genesis_hash: Hash, transaction_id: TransactionSignDataHash, secret_key: LegacyDaedalusPrivateKey): Witness;
 /**
 * Get string representation
 * @returns {string} 
