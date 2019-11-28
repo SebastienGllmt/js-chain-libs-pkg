@@ -1,10 +1,11 @@
 {
   "name": "js-chain-libs",
   "collaborators": [
-    "Enzo Cioppettini <ecioppettini@atixlabs.com>"
+    "Enzo Cioppettini <ecioppettini@atixlabs.com>",
+    "Sebastien Guillemot <sebastien@emurgo.io>"
   ],
-  "description": "Jörmungandr library, wallet and stake pool management.\n",
-  "version": "0.1.6",
+  "description": "Jörmungandr library, wallet and stake pool management.",
+  "version": "0.3.0",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",

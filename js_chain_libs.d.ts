@@ -26,6 +26,12 @@ export enum AddressKind {
 }
 /**
 */
+export enum InputKind {
+  Account,
+  Utxo,
+}
+/**
+*/
 export enum DelegationKind {
   NonDelegated,
   Full,
@@ -33,7 +39,7 @@ export enum DelegationKind {
 }
 /**
 */
-export enum CertificateType {
+export enum CertificateKind {
   StakeDelegation,
   OwnerStakeDelegation,
   PoolRegistration,
@@ -439,6 +445,16 @@ export class Block {
 export class BlockId {
   free(): void;
 /**
+* @param {Uint8Array} bytes 
+* @returns {Hash} 
+*/
+  static calculate(bytes: Uint8Array): Hash;
+/**
+* @param {any} bytes 
+* @returns {BlockId} 
+*/
+  static from_bytes(bytes: any): BlockId;
+/**
 * @returns {Uint8Array} 
 */
   as_bytes(): Uint8Array;
@@ -672,7 +688,12 @@ export class FragmentId {
 * @param {Uint8Array} bytes 
 * @returns {FragmentId} 
 */
-  static from_bytes(bytes: Uint8Array): FragmentId;
+  static calculate(bytes: Uint8Array): FragmentId;
+/**
+* @param {any} bytes 
+* @returns {FragmentId} 
+*/
+  static from_bytes(bytes: any): FragmentId;
 /**
 * @returns {Uint8Array} 
 */
@@ -726,7 +747,7 @@ export class Hash {
 * @param {Uint8Array} bytes 
 * @returns {Hash} 
 */
-  static from_bytes(bytes: Uint8Array): Hash;
+  static calculate(bytes: Uint8Array): Hash;
 /**
 * @param {string} hex_string 
 * @returns {Hash} 
@@ -786,10 +807,9 @@ export class Input {
 */
   static from_account(account: Account, v: Value): Input;
 /**
-* Get the kind of Input, this can be either \"Account\" or \"Utxo\
-* @returns {string} 
+* @returns {number} 
 */
-  get_type(): string;
+  get_type(): number;
 /**
 * @returns {boolean} 
 */
@@ -812,6 +832,15 @@ export class Input {
 * @returns {AccountIdentifier} 
 */
   get_account_identifier(): AccountIdentifier;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
+* @param {any} bytes 
+* @returns {Input} 
+*/
+  static from_bytes(bytes: any): Input;
 }
 /**
 */
@@ -1420,10 +1449,6 @@ export class Transaction {
 */
   id(): TransactionSignDataHash;
 /**
-* @returns {Witnesses} 
-*/
-  witnesses(): Witnesses;
-/**
 * Get collection of the inputs in the transaction (this allocates new copies of all the values)
 * @returns {Inputs} 
 */
@@ -1437,6 +1462,10 @@ export class Transaction {
 * @returns {Certificate} 
 */
   certificate(): Certificate | undefined;
+/**
+* @returns {Witnesses} 
+*/
+  witnesses(): Witnesses;
 }
 /**
 */
