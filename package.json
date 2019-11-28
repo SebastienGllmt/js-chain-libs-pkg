@@ -1,5 +1,5 @@
 {
-  "name": "js-chain-libs",
+  "name": "@emurgo/js-chain-libs",
   "collaborators": [
     "Enzo Cioppettini <ecioppettini@atixlabs.com>",
     "Sebastien Guillemot <sebastien@emurgo.io>"
@@ -9,17 +9,18 @@
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/input-output-hk/js-chain-libs"
+    "url": "https://github.com/emurgo/js-chain-libs"
   },
   "files": [
     "js_chain_libs_bg.wasm",
     "js_chain_libs.js",
+    "js_chain_libs.js.flow",
     "js_chain_libs.d.ts",
     "LICENSE_APACHE",
     "LICENSE_MIT"
   ],
   "module": "js_chain_libs.js",
-  "homepage": "https://github.com/input-output-hk/js-chain-libs#js-chain-libs",
+  "homepage": "https://github.com/emurgo/js-chain-libs#js-chain-libs",
   "types": "js_chain_libs.d.ts",
   "sideEffects": "false"
 }
