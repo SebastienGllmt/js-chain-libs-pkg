@@ -973,6 +973,16 @@ export class Certificate {
         return Certificate.__wrap(ret);
     }
     /**
+    * Create a Certificate for OwnerStakeDelegation
+    * @param {OwnerStakeDelegation} owner_stake
+    * @returns {Certificate}
+    */
+    static owner_stake_delegation(owner_stake) {
+        _assertClass(owner_stake, OwnerStakeDelegation);
+        const ret = wasm.certificate_owner_stake_delegation(owner_stake.ptr);
+        return Certificate.__wrap(ret);
+    }
+    /**
     * Create a Certificate for PoolRegistration
     * @param {PoolRegistration} pool_registration
     * @returns {Certificate}
@@ -990,6 +1000,16 @@ export class Certificate {
     static stake_pool_retirement(pool_retirement) {
         _assertClass(pool_retirement, PoolRetirement);
         const ret = wasm.certificate_stake_pool_retirement(pool_retirement.ptr);
+        return Certificate.__wrap(ret);
+    }
+    /**
+    * Create a Certificate for PoolUpdate
+    * @param {PoolUpdate} pool_update
+    * @returns {Certificate}
+    */
+    static stake_pool_update(pool_update) {
+        _assertClass(pool_update, PoolUpdate);
+        const ret = wasm.certificate_stake_pool_update(pool_update.ptr);
         return Certificate.__wrap(ret);
     }
     /**
@@ -1026,6 +1046,13 @@ export class Certificate {
     get_pool_retirement() {
         const ret = wasm.certificate_get_pool_retirement(this.ptr);
         return PoolRetirement.__wrap(ret);
+    }
+    /**
+    * @returns {PoolUpdate}
+    */
+    get_pool_update() {
+        const ret = wasm.certificate_get_pool_update(this.ptr);
+        return PoolUpdate.__wrap(ret);
     }
 }
 /**
@@ -1477,6 +1504,72 @@ export class Fragments {
         const ptr0 = item.ptr;
         item.ptr = 0;
         wasm.fragments_add(this.ptr, ptr0);
+    }
+}
+/**
+*/
+export class GenesisPraosLeader {
+
+    static __wrap(ptr) {
+        const obj = Object.create(GenesisPraosLeader.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_genesispraosleader_free(ptr);
+    }
+    /**
+    * @param {KesPublicKey} kes_public_key
+    * @param {VrfPublicKey} vrf_public_key
+    * @returns {GenesisPraosLeader}
+    */
+    static new(kes_public_key, vrf_public_key) {
+        _assertClass(kes_public_key, KesPublicKey);
+        _assertClass(vrf_public_key, VrfPublicKey);
+        const ret = wasm.genesispraosleader_new(kes_public_key.ptr, vrf_public_key.ptr);
+        return GenesisPraosLeader.__wrap(ret);
+    }
+}
+/**
+*/
+export class GenesisProasLeaderHash {
+
+    static __wrap(ptr) {
+        const obj = Object.create(GenesisProasLeaderHash.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_genesisproasleaderhash_free(ptr);
+    }
+    /**
+    * @param {string} hex_string
+    * @returns {GenesisProasLeaderHash}
+    */
+    static from_hex(hex_string) {
+        const ret = wasm.genesisproasleaderhash_from_hex(passStringToWasm(hex_string), WASM_VECTOR_LEN);
+        return GenesisProasLeaderHash.__wrap(ret);
+    }
+    /**
+    * @returns {string}
+    */
+    to_string() {
+        const retptr = 8;
+        const ret = wasm.genesisproasleaderhash_to_string(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
     }
 }
 /**
@@ -2308,6 +2401,25 @@ export class OwnerStakeDelegation {
         const ret = wasm.ownerstakedelegation_delegation_type(this.ptr);
         return DelegationType.__wrap(ret);
     }
+    /**
+    * @returns {Uint8Array}
+    */
+    as_bytes() {
+        const retptr = 8;
+        const ret = wasm.ownerstakedelegation_as_bytes(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @param {Uint8Array} bytes
+    * @returns {OwnerStakeDelegation}
+    */
+    static from_bytes(bytes) {
+        const ret = wasm.ownerstakedelegation_from_bytes(passArray8ToWasm(bytes), WASM_VECTOR_LEN);
+        return OwnerStakeDelegation.__wrap(ret);
+    }
 }
 /**
 */
@@ -2548,18 +2660,16 @@ export class PoolRegistration {
     * @param {PublicKeys} operators
     * @param {number} management_threshold
     * @param {TimeOffsetSeconds} start_validity
-    * @param {KesPublicKey} kes_public_key
-    * @param {VrfPublicKey} vrf_public_key
+    * @param {GenesisPraosLeader} leader_keys
     * @returns {PoolRegistration}
     */
-    constructor(serial, owners, operators, management_threshold, start_validity, kes_public_key, vrf_public_key) {
+    constructor(serial, owners, operators, management_threshold, start_validity, leader_keys) {
         _assertClass(serial, U128);
         _assertClass(owners, PublicKeys);
         _assertClass(operators, PublicKeys);
         _assertClass(start_validity, TimeOffsetSeconds);
-        _assertClass(kes_public_key, KesPublicKey);
-        _assertClass(vrf_public_key, VrfPublicKey);
-        const ret = wasm.poolregistration_new(serial.ptr, owners.ptr, operators.ptr, management_threshold, start_validity.ptr, kes_public_key.ptr, vrf_public_key.ptr);
+        _assertClass(leader_keys, GenesisPraosLeader);
+        const ret = wasm.poolregistration_new(serial.ptr, owners.ptr, operators.ptr, management_threshold, start_validity.ptr, leader_keys.ptr);
         return PoolRegistration.__wrap(ret);
     }
     /**
@@ -2577,10 +2687,18 @@ export class PoolRegistration {
         return TimeOffsetSeconds.__wrap(ret);
     }
     /**
+    * TODO: missing PoolPermissions. Don\'t think we need this for now
     * @returns {PublicKeys}
     */
     owners() {
         const ret = wasm.poolregistration_owners(this.ptr);
+        return PublicKeys.__wrap(ret);
+    }
+    /**
+    * @returns {PublicKeys}
+    */
+    operators() {
+        const ret = wasm.poolregistration_operators(this.ptr);
         return PublicKeys.__wrap(ret);
     }
     /**
@@ -2589,6 +2707,39 @@ export class PoolRegistration {
     rewards() {
         const ret = wasm.poolregistration_rewards(this.ptr);
         return TaxType.__wrap(ret);
+    }
+    /**
+    * @returns {Account}
+    */
+    reward_account() {
+        const ret = wasm.poolregistration_reward_account(this.ptr);
+        return ret === 0 ? undefined : Account.__wrap(ret);
+    }
+    /**
+    * @returns {GenesisPraosLeader}
+    */
+    keys() {
+        const ret = wasm.poolregistration_keys(this.ptr);
+        return GenesisPraosLeader.__wrap(ret);
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    as_bytes() {
+        const retptr = 8;
+        const ret = wasm.poolregistration_as_bytes(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @param {Uint8Array} bytes
+    * @returns {PoolRegistration}
+    */
+    static from_bytes(bytes) {
+        const ret = wasm.poolregistration_from_bytes(passArray8ToWasm(bytes), WASM_VECTOR_LEN);
+        return PoolRegistration.__wrap(ret);
     }
 }
 /**
@@ -2635,6 +2786,50 @@ export class PoolRetirement {
 
         wasm.__wbg_poolretirement_free(ptr);
     }
+    /**
+    * @param {PoolId} pool_id
+    * @param {TimeOffsetSeconds} retirement_time_offset
+    * @returns {PoolRetirement}
+    */
+    static new(pool_id, retirement_time_offset) {
+        _assertClass(pool_id, PoolId);
+        _assertClass(retirement_time_offset, TimeOffsetSeconds);
+        const ret = wasm.poolretirement_new(pool_id.ptr, retirement_time_offset.ptr);
+        return PoolRetirement.__wrap(ret);
+    }
+    /**
+    * @returns {PoolId}
+    */
+    pool_id() {
+        const ret = wasm.poolretirement_pool_id(this.ptr);
+        return PoolId.__wrap(ret);
+    }
+    /**
+    * @returns {TimeOffsetSeconds}
+    */
+    retirement_time() {
+        const ret = wasm.poolretirement_retirement_time(this.ptr);
+        return TimeOffsetSeconds.__wrap(ret);
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    as_bytes() {
+        const retptr = 8;
+        const ret = wasm.poolretirement_as_bytes(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @param {Uint8Array} bytes
+    * @returns {PoolRetirement}
+    */
+    static from_bytes(bytes) {
+        const ret = wasm.poolretirement_from_bytes(passArray8ToWasm(bytes), WASM_VECTOR_LEN);
+        return PoolRetirement.__wrap(ret);
+    }
 }
 /**
 */
@@ -2661,6 +2856,86 @@ export class PoolRetirementAuthData {
         _assertClass(signatures, IndexSignatures);
         const ret = wasm.poolretirementauthdata_new(signatures.ptr);
         return PoolRetirementAuthData.__wrap(ret);
+    }
+}
+/**
+*/
+export class PoolUpdate {
+
+    static __wrap(ptr) {
+        const obj = Object.create(PoolUpdate.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_poolupdate_free(ptr);
+    }
+    /**
+    * @param {PoolId} pool_id
+    * @param {TimeOffsetSeconds} start_validity
+    * @param {GenesisProasLeaderHash} previous_keys
+    * @param {GenesisPraosLeader} updated_keys
+    * @returns {PoolUpdate}
+    */
+    static new(pool_id, start_validity, previous_keys, updated_keys) {
+        _assertClass(pool_id, PoolId);
+        _assertClass(start_validity, TimeOffsetSeconds);
+        _assertClass(previous_keys, GenesisProasLeaderHash);
+        _assertClass(updated_keys, GenesisPraosLeader);
+        const ret = wasm.poolupdate_new(pool_id.ptr, start_validity.ptr, previous_keys.ptr, updated_keys.ptr);
+        return PoolUpdate.__wrap(ret);
+    }
+    /**
+    * @returns {PoolId}
+    */
+    pool_id() {
+        const ret = wasm.poolupdate_pool_id(this.ptr);
+        return PoolId.__wrap(ret);
+    }
+    /**
+    * @returns {TimeOffsetSeconds}
+    */
+    start_validity() {
+        const ret = wasm.poolupdate_start_validity(this.ptr);
+        return TimeOffsetSeconds.__wrap(ret);
+    }
+    /**
+    * @returns {GenesisProasLeaderHash}
+    */
+    previous_keys() {
+        const ret = wasm.poolupdate_previous_keys(this.ptr);
+        return GenesisProasLeaderHash.__wrap(ret);
+    }
+    /**
+    * @returns {GenesisPraosLeader}
+    */
+    updated_keys() {
+        const ret = wasm.poolupdate_updated_keys(this.ptr);
+        return GenesisPraosLeader.__wrap(ret);
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    as_bytes() {
+        const retptr = 8;
+        const ret = wasm.poolupdate_as_bytes(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @param {Uint8Array} bytes
+    * @returns {PoolUpdate}
+    */
+    static from_bytes(bytes) {
+        const ret = wasm.poolupdate_from_bytes(passArray8ToWasm(bytes), WASM_VECTOR_LEN);
+        return PoolUpdate.__wrap(ret);
     }
 }
 /**
@@ -3018,6 +3293,25 @@ export class StakeDelegation {
     account() {
         const ret = wasm.stakedelegation_account(this.ptr);
         return AccountIdentifier.__wrap(ret);
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    as_bytes() {
+        const retptr = 8;
+        const ret = wasm.stakedelegation_as_bytes(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+    /**
+    * @param {Uint8Array} bytes
+    * @returns {StakeDelegation}
+    */
+    static from_bytes(bytes) {
+        const ret = wasm.stakedelegation_from_bytes(passArray8ToWasm(bytes), WASM_VECTOR_LEN);
+        return StakeDelegation.__wrap(ret);
     }
 }
 /**

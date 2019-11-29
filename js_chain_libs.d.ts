@@ -470,6 +470,12 @@ export class Certificate {
 */
   static stake_delegation(stake_delegation: StakeDelegation): Certificate;
 /**
+* Create a Certificate for OwnerStakeDelegation
+* @param {OwnerStakeDelegation} owner_stake 
+* @returns {Certificate} 
+*/
+  static owner_stake_delegation(owner_stake: OwnerStakeDelegation): Certificate;
+/**
 * Create a Certificate for PoolRegistration
 * @param {PoolRegistration} pool_registration 
 * @returns {Certificate} 
@@ -481,6 +487,12 @@ export class Certificate {
 * @returns {Certificate} 
 */
   static stake_pool_retirement(pool_retirement: PoolRetirement): Certificate;
+/**
+* Create a Certificate for PoolUpdate
+* @param {PoolUpdate} pool_update 
+* @returns {Certificate} 
+*/
+  static stake_pool_update(pool_update: PoolUpdate): Certificate;
 /**
 * @returns {number} 
 */
@@ -501,6 +513,10 @@ export class Certificate {
 * @returns {PoolRetirement} 
 */
   get_pool_retirement(): PoolRetirement;
+/**
+* @returns {PoolUpdate} 
+*/
+  get_pool_update(): PoolUpdate;
 }
 /**
 * Delegation Ratio type express a number of parts
@@ -720,6 +736,31 @@ export class Fragments {
 * @param {Fragment} item 
 */
   add(item: Fragment): void;
+}
+/**
+*/
+export class GenesisPraosLeader {
+  free(): void;
+/**
+* @param {KesPublicKey} kes_public_key 
+* @param {VrfPublicKey} vrf_public_key 
+* @returns {GenesisPraosLeader} 
+*/
+  static new(kes_public_key: KesPublicKey, vrf_public_key: VrfPublicKey): GenesisPraosLeader;
+}
+/**
+*/
+export class GenesisProasLeaderHash {
+  free(): void;
+/**
+* @param {string} hex_string 
+* @returns {GenesisProasLeaderHash} 
+*/
+  static from_hex(hex_string: string): GenesisProasLeaderHash;
+/**
+* @returns {string} 
+*/
+  to_string(): string;
 }
 /**
 */
@@ -1089,6 +1130,15 @@ export class OwnerStakeDelegation {
 * @returns {DelegationType} 
 */
   delegation_type(): DelegationType;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
+* @param {Uint8Array} bytes 
+* @returns {OwnerStakeDelegation} 
+*/
+  static from_bytes(bytes: Uint8Array): OwnerStakeDelegation;
 }
 /**
 */
@@ -1194,11 +1244,10 @@ export class PoolRegistration {
 * @param {PublicKeys} operators 
 * @param {number} management_threshold 
 * @param {TimeOffsetSeconds} start_validity 
-* @param {KesPublicKey} kes_public_key 
-* @param {VrfPublicKey} vrf_public_key 
+* @param {GenesisPraosLeader} leader_keys 
 * @returns {PoolRegistration} 
 */
-  constructor(serial: U128, owners: PublicKeys, operators: PublicKeys, management_threshold: number, start_validity: TimeOffsetSeconds, kes_public_key: KesPublicKey, vrf_public_key: VrfPublicKey);
+  constructor(serial: U128, owners: PublicKeys, operators: PublicKeys, management_threshold: number, start_validity: TimeOffsetSeconds, leader_keys: GenesisPraosLeader);
 /**
 * @returns {PoolId} 
 */
@@ -1208,13 +1257,35 @@ export class PoolRegistration {
 */
   start_validity(): TimeOffsetSeconds;
 /**
+* TODO: missing PoolPermissions. Don\'t think we need this for now
 * @returns {PublicKeys} 
 */
   owners(): PublicKeys;
 /**
+* @returns {PublicKeys} 
+*/
+  operators(): PublicKeys;
+/**
 * @returns {TaxType} 
 */
   rewards(): TaxType;
+/**
+* @returns {Account} 
+*/
+  reward_account(): Account | undefined;
+/**
+* @returns {GenesisPraosLeader} 
+*/
+  keys(): GenesisPraosLeader;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
+* @param {Uint8Array} bytes 
+* @returns {PoolRegistration} 
+*/
+  static from_bytes(bytes: Uint8Array): PoolRegistration;
 }
 /**
 */
@@ -1230,6 +1301,29 @@ export class PoolRegistrationAuthData {
 */
 export class PoolRetirement {
   free(): void;
+/**
+* @param {PoolId} pool_id 
+* @param {TimeOffsetSeconds} retirement_time_offset 
+* @returns {PoolRetirement} 
+*/
+  static new(pool_id: PoolId, retirement_time_offset: TimeOffsetSeconds): PoolRetirement;
+/**
+* @returns {PoolId} 
+*/
+  pool_id(): PoolId;
+/**
+* @returns {TimeOffsetSeconds} 
+*/
+  retirement_time(): TimeOffsetSeconds;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
+* @param {Uint8Array} bytes 
+* @returns {PoolRetirement} 
+*/
+  static from_bytes(bytes: Uint8Array): PoolRetirement;
 }
 /**
 */
@@ -1240,6 +1334,44 @@ export class PoolRetirementAuthData {
 * @returns {PoolRetirementAuthData} 
 */
   static new(signatures: IndexSignatures): PoolRetirementAuthData;
+}
+/**
+*/
+export class PoolUpdate {
+  free(): void;
+/**
+* @param {PoolId} pool_id 
+* @param {TimeOffsetSeconds} start_validity 
+* @param {GenesisProasLeaderHash} previous_keys 
+* @param {GenesisPraosLeader} updated_keys 
+* @returns {PoolUpdate} 
+*/
+  static new(pool_id: PoolId, start_validity: TimeOffsetSeconds, previous_keys: GenesisProasLeaderHash, updated_keys: GenesisPraosLeader): PoolUpdate;
+/**
+* @returns {PoolId} 
+*/
+  pool_id(): PoolId;
+/**
+* @returns {TimeOffsetSeconds} 
+*/
+  start_validity(): TimeOffsetSeconds;
+/**
+* @returns {GenesisProasLeaderHash} 
+*/
+  previous_keys(): GenesisProasLeaderHash;
+/**
+* @returns {GenesisPraosLeader} 
+*/
+  updated_keys(): GenesisPraosLeader;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
+* @param {Uint8Array} bytes 
+* @returns {PoolUpdate} 
+*/
+  static from_bytes(bytes: Uint8Array): PoolUpdate;
 }
 /**
 */
@@ -1408,6 +1540,15 @@ export class StakeDelegation {
 * @returns {AccountIdentifier} 
 */
   account(): AccountIdentifier;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
+/**
+* @param {Uint8Array} bytes 
+* @returns {StakeDelegation} 
+*/
+  static from_bytes(bytes: Uint8Array): StakeDelegation;
 }
 /**
 */
