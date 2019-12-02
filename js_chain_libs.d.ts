@@ -750,13 +750,13 @@ export class GenesisPraosLeader {
 }
 /**
 */
-export class GenesisProasLeaderHash {
+export class GenesisPraosLeaderHash {
   free(): void;
 /**
 * @param {string} hex_string 
-* @returns {GenesisProasLeaderHash} 
+* @returns {GenesisPraosLeaderHash} 
 */
-  static from_hex(hex_string: string): GenesisProasLeaderHash;
+  static from_hex(hex_string: string): GenesisPraosLeaderHash;
 /**
 * @returns {string} 
 */
@@ -1342,11 +1342,11 @@ export class PoolUpdate {
 /**
 * @param {PoolId} pool_id 
 * @param {TimeOffsetSeconds} start_validity 
-* @param {GenesisProasLeaderHash} previous_keys 
+* @param {GenesisPraosLeaderHash} previous_keys 
 * @param {GenesisPraosLeader} updated_keys 
 * @returns {PoolUpdate} 
 */
-  static new(pool_id: PoolId, start_validity: TimeOffsetSeconds, previous_keys: GenesisProasLeaderHash, updated_keys: GenesisPraosLeader): PoolUpdate;
+  static new(pool_id: PoolId, start_validity: TimeOffsetSeconds, previous_keys: GenesisPraosLeaderHash, updated_keys: GenesisPraosLeader): PoolUpdate;
 /**
 * @returns {PoolId} 
 */
@@ -1356,9 +1356,9 @@ export class PoolUpdate {
 */
   start_validity(): TimeOffsetSeconds;
 /**
-* @returns {GenesisProasLeaderHash} 
+* @returns {GenesisPraosLeaderHash} 
 */
-  previous_keys(): GenesisProasLeaderHash;
+  previous_keys(): GenesisPraosLeaderHash;
 /**
 * @returns {GenesisPraosLeader} 
 */
