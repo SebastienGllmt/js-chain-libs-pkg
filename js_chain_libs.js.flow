@@ -617,6 +617,11 @@ declare export class Certificate {
    * @returns {PoolUpdate}
    */
   get_pool_update(): PoolUpdate;
+
+  /**
+   * @returns {Uint8Array}
+   */
+  as_bytes(): Uint8Array;
 }
 /**
  * Delegation Ratio type express a number of parts

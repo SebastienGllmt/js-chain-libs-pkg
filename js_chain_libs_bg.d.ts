@@ -218,6 +218,7 @@ export function certificate_get_owner_stake_delegation(a: number): number;
 export function certificate_get_pool_registration(a: number): number;
 export function certificate_get_pool_retirement(a: number): number;
 export function certificate_get_pool_update(a: number): number;
+export function certificate_as_bytes(a: number, b: number): void;
 export function poolregistration_new(a: number, b: number, c: number, d: number, e: number, f: number): number;
 export function poolregistration_id(a: number): number;
 export function poolregistration_start_validity(a: number): number;

@@ -517,6 +517,10 @@ export class Certificate {
 * @returns {PoolUpdate} 
 */
   get_pool_update(): PoolUpdate;
+/**
+* @returns {Uint8Array} 
+*/
+  as_bytes(): Uint8Array;
 }
 /**
 * Delegation Ratio type express a number of parts
@@ -1257,7 +1261,6 @@ export class PoolRegistration {
 */
   start_validity(): TimeOffsetSeconds;
 /**
-* TODO: missing PoolPermissions. Don\'t think we need this for now
 * @returns {PublicKeys} 
 */
   owners(): PublicKeys;
