@@ -1165,6 +1165,13 @@ export class DelegationType {
         const ret = wasm.delegationtype_get_full(this.ptr);
         return ret === 0 ? undefined : PoolId.__wrap(ret);
     }
+    /**
+    * @returns {DelegationRatio}
+    */
+    get_ratios() {
+        const ret = wasm.delegationtype_get_ratios(this.ptr);
+        return ret === 0 ? undefined : DelegationRatio.__wrap(ret);
+    }
 }
 /**
 */
@@ -1544,6 +1551,20 @@ export class GenesisPraosLeader {
         _assertClass(vrf_public_key, VrfPublicKey);
         const ret = wasm.genesispraosleader_new(kes_public_key.ptr, vrf_public_key.ptr);
         return GenesisPraosLeader.__wrap(ret);
+    }
+    /**
+    * @returns {KesPublicKey}
+    */
+    kes_pubkey() {
+        const ret = wasm.genesispraosleader_kes_pubkey(this.ptr);
+        return KesPublicKey.__wrap(ret);
+    }
+    /**
+    * @returns {VrfPublicKey}
+    */
+    vrf_pubkey() {
+        const ret = wasm.genesispraosleader_vrf_pubkey(this.ptr);
+        return VrfPublicKey.__wrap(ret);
     }
 }
 /**
@@ -2063,6 +2084,17 @@ export class KesPublicKey {
     static from_bech32(bech32_str) {
         const ret = wasm.kespublickey_from_bech32(passStringToWasm(bech32_str), WASM_VECTOR_LEN);
         return KesPublicKey.__wrap(ret);
+    }
+    /**
+    * @returns {string}
+    */
+    to_bech32() {
+        const retptr = 8;
+        const ret = wasm.kespublickey_to_bech32(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
     }
 }
 /**
@@ -3368,6 +3400,34 @@ export class TaxType {
 
         wasm.__wbg_taxtype_free(ptr);
     }
+    /**
+    * @returns {Value}
+    */
+    fixed() {
+        const ret = wasm.taxtype_fixed(this.ptr);
+        return Value.__wrap(ret);
+    }
+    /**
+    * @returns {Value}
+    */
+    ratio_numerator() {
+        const ret = wasm.taxtype_ratio_numerator(this.ptr);
+        return Value.__wrap(ret);
+    }
+    /**
+    * @returns {Value}
+    */
+    ratio_denominator() {
+        const ret = wasm.taxtype_ratio_denominator(this.ptr);
+        return Value.__wrap(ret);
+    }
+    /**
+    * @returns {Value}
+    */
+    max_limit() {
+        const ret = wasm.taxtype_max_limit(this.ptr);
+        return ret === 0 ? undefined : Value.__wrap(ret);
+    }
 }
 /**
 */
@@ -3945,6 +4005,17 @@ export class VrfPublicKey {
     static from_bech32(bech32_str) {
         const ret = wasm.vrfpublickey_from_bech32(passStringToWasm(bech32_str), WASM_VECTOR_LEN);
         return VrfPublicKey.__wrap(ret);
+    }
+    /**
+    * @returns {string}
+    */
+    to_bech32() {
+        const retptr = 8;
+        const ret = wasm.vrfpublickey_to_bech32(retptr, this.ptr);
+        const memi32 = getInt32Memory();
+        const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
     }
 }
 /**

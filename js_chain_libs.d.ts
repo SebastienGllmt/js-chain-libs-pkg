@@ -574,6 +574,10 @@ export class DelegationType {
 * @returns {PoolId} 
 */
   get_full(): PoolId | undefined;
+/**
+* @returns {DelegationRatio} 
+*/
+  get_ratios(): DelegationRatio | undefined;
 }
 /**
 */
@@ -751,6 +755,14 @@ export class GenesisPraosLeader {
 * @returns {GenesisPraosLeader} 
 */
   static new(kes_public_key: KesPublicKey, vrf_public_key: VrfPublicKey): GenesisPraosLeader;
+/**
+* @returns {KesPublicKey} 
+*/
+  kes_pubkey(): KesPublicKey;
+/**
+* @returns {VrfPublicKey} 
+*/
+  vrf_pubkey(): VrfPublicKey;
 }
 /**
 */
@@ -987,6 +999,10 @@ export class KesPublicKey {
 * @returns {KesPublicKey} 
 */
   static from_bech32(bech32_str: string): KesPublicKey;
+/**
+* @returns {string} 
+*/
+  to_bech32(): string;
 }
 /**
 */
@@ -1567,6 +1583,22 @@ export class StakeDelegationAuthData {
 */
 export class TaxType {
   free(): void;
+/**
+* @returns {Value} 
+*/
+  fixed(): Value;
+/**
+* @returns {Value} 
+*/
+  ratio_numerator(): Value;
+/**
+* @returns {Value} 
+*/
+  ratio_denominator(): Value;
+/**
+* @returns {Value} 
+*/
+  max_limit(): Value | undefined;
 }
 /**
 */
@@ -1821,6 +1853,10 @@ export class VrfPublicKey {
 * @returns {VrfPublicKey} 
 */
   static from_bech32(bech32_str: string): VrfPublicKey;
+/**
+* @returns {string} 
+*/
+  to_bech32(): string;
 }
 /**
 * Structure that proofs that certain user agrees with
