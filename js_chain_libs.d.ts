@@ -542,6 +542,14 @@ export class DelegationRatio {
 * @returns {DelegationRatio} 
 */
   static new(parts: number, pools: PoolDelegationRatios): DelegationRatio | undefined;
+/**
+* @returns {number} 
+*/
+  parts(): number;
+/**
+* @returns {PoolDelegationRatios} 
+*/
+  pools(): PoolDelegationRatios;
 }
 /**
 * Set the choice of delegation:
@@ -1217,6 +1225,14 @@ export class PoolDelegationRatio {
 * @returns {PoolDelegationRatio} 
 */
   static new(pool: PoolId, part: number): PoolDelegationRatio;
+/**
+* @returns {number} 
+*/
+  parts(): number;
+/**
+* @returns {PoolId} 
+*/
+  pool(): PoolId;
 }
 /**
 */

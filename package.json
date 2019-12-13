@@ -5,7 +5,7 @@
     "Sebastien Guillemot <sebastien@emurgo.io>"
   ],
   "description": "Jörmungandr library, wallet and stake pool management.",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
