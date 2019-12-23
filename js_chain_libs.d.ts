@@ -630,9 +630,10 @@ export class Fee {
 * @param {Value} constant 
 * @param {Value} coefficient 
 * @param {Value} certificate 
+* @param {PerCertificateFee} per_certificate_fee 
 * @returns {Fee} 
 */
-  static linear_fee(constant: Value, coefficient: Value, certificate: Value): Fee;
+  static linear_fee(constant: Value, coefficient: Value, certificate: Value, per_certificate_fee: PerCertificateFee): Fee;
 /**
 * @param {Transaction} tx 
 * @returns {Value} 
@@ -1214,6 +1215,27 @@ export class PayloadAuthData {
 * @returns {PayloadAuthData} 
 */
   static for_pool_update(auth_data: PoolUpdateAuthData): PayloadAuthData;
+}
+/**
+*/
+export class PerCertificateFee {
+  free(): void;
+/**
+* @returns {PerCertificateFee} 
+*/
+  static new(): PerCertificateFee;
+/**
+* @param {Value} val 
+*/
+  set_pool_registration(val: Value): void;
+/**
+* @param {Value} val 
+*/
+  set_stake_delegation(val: Value): void;
+/**
+* @param {Value} val 
+*/
+  set_owner_stake_delegation(val: Value): void;
 }
 /**
 */
