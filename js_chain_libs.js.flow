@@ -124,6 +124,12 @@ declare export class AccountIdentifier {
   to_hex(): string;
 
   /**
+   * @param {Uint8Array} bytes
+   * @returns {Address}
+   */
+  static from_bytes(bytes: Uint8Array): AccountIdentifier;
+
+  /**
    * @returns {Account}
    */
   to_account_single(): Account;

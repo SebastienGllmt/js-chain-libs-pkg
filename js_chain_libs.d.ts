@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 /**
 * @param {any} input 
 * @returns {string} 
@@ -106,6 +107,11 @@ export class AccountIdentifier {
 */
   to_hex(): string;
 /**
+* @param {Uint8Array} bytes 
+* @returns {AccountIdentifier} 
+*/
+  static from_bytes(bytes: Uint8Array): AccountIdentifier;
+/**
 * @returns {Account} 
 */
   to_account_single(): Account;
@@ -155,10 +161,10 @@ export class AccountWitness {
 export class Address {
   free(): void;
 /**
-* @param {any} bytes 
+* @param {Uint8Array} bytes 
 * @returns {Address} 
 */
-  static from_bytes(bytes: any): Address;
+  static from_bytes(bytes: Uint8Array): Address;
 /**
 * @returns {Uint8Array} 
 */
@@ -231,19 +237,19 @@ export class Address {
 */
   get_kind(): number;
 /**
-* @returns {SingleAddress} 
+* @returns {SingleAddress | undefined} 
 */
   to_single_address(): SingleAddress | undefined;
 /**
-* @returns {GroupAddress} 
+* @returns {GroupAddress | undefined} 
 */
   to_group_address(): GroupAddress | undefined;
 /**
-* @returns {AccountAddress} 
+* @returns {AccountAddress | undefined} 
 */
   to_account_address(): AccountAddress | undefined;
 /**
-* @returns {MultisigAddress} 
+* @returns {MultisigAddress | undefined} 
 */
   to_multisig_address(): MultisigAddress | undefined;
 }
@@ -432,7 +438,7 @@ export class Block {
 */
   chain_length(): number;
 /**
-* @returns {PoolId} 
+* @returns {PoolId | undefined} 
 */
   leader_id(): PoolId | undefined;
 /**
@@ -539,7 +545,7 @@ export class DelegationRatio {
 /**
 * @param {number} parts 
 * @param {PoolDelegationRatios} pools 
-* @returns {DelegationRatio} 
+* @returns {DelegationRatio | undefined} 
 */
   static new(parts: number, pools: PoolDelegationRatios): DelegationRatio | undefined;
 /**
@@ -579,11 +585,11 @@ export class DelegationType {
 */
   get_kind(): number;
 /**
-* @returns {PoolId} 
+* @returns {PoolId | undefined} 
 */
   get_full(): PoolId | undefined;
 /**
-* @returns {DelegationRatio} 
+* @returns {DelegationRatio | undefined} 
 */
   get_ratios(): DelegationRatio | undefined;
 }
@@ -723,10 +729,10 @@ export class FragmentId {
 */
   static calculate(bytes: Uint8Array): FragmentId;
 /**
-* @param {any} bytes 
+* @param {Uint8Array} bytes 
 * @returns {FragmentId} 
 */
-  static from_bytes(bytes: any): FragmentId;
+  static from_bytes(bytes: Uint8Array): FragmentId;
 /**
 * @returns {Uint8Array} 
 */
@@ -1303,7 +1309,6 @@ export class PoolRegistration {
 * @param {number} management_threshold 
 * @param {TimeOffsetSeconds} start_validity 
 * @param {GenesisPraosLeader} leader_keys 
-* @returns {PoolRegistration} 
 */
   constructor(serial: U128, owners: PublicKeys, operators: PublicKeys, management_threshold: number, start_validity: TimeOffsetSeconds, leader_keys: GenesisPraosLeader);
 /**
@@ -1327,7 +1332,7 @@ export class PoolRegistration {
 */
   rewards(): TaxType;
 /**
-* @returns {Account} 
+* @returns {Account | undefined} 
 */
   reward_account(): Account | undefined;
 /**
@@ -1534,7 +1539,6 @@ export class PublicKey {
 export class PublicKeys {
   free(): void;
 /**
-* @returns {PublicKeys} 
 */
   constructor();
 /**
@@ -1634,7 +1638,7 @@ export class TaxType {
 */
   ratio_denominator(): Value;
 /**
-* @returns {Value} 
+* @returns {Value | undefined} 
 */
   max_limit(): Value | undefined;
 }
@@ -1673,7 +1677,7 @@ export class Transaction {
 */
   outputs(): Outputs;
 /**
-* @returns {Certificate} 
+* @returns {Certificate | undefined} 
 */
   certificate(): Certificate | undefined;
 /**
@@ -1697,7 +1701,6 @@ export class TransactionBindingAuthData {
 export class TransactionBuilder {
   free(): void;
 /**
-* @returns {TransactionBuilder} 
 */
   constructor();
 /**
